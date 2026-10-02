@@ -1,6 +1,6 @@
 # The Python HSM Dispatcher Architecture
 
-Document version: 0.2 (2026-10-02)
+Document version: 0.3 (2026-10-02)
 
 The dispatcher executes Hierarchical State Machine (HSM) diagrams at run
 time. The diagrams are stored in the CyberiadaML-GraphML format (CGML,
@@ -31,6 +31,7 @@ The requirements come from the first user of the dispatcher, the
 | R9 | Save the execution state and continue from it later. | The snapshot |
 | R10 | Report every step in a trace usable by tests and diagnostics. | The trace |
 | R11 | A mistake in the text of the diagram stops the machine and names the place. | Errors |
+| R12 | The diagram prints messages; they reach the trace and a stream chosen by the application. | Printing |
 
 ## Standards
 
@@ -81,7 +82,7 @@ The standards leave these points undefined. The dispatcher fixes them:
                               hsmd.py               hsmd_components.py
                           +----------------+       +----------------+
   application ----------> |                | <---- |   Component    |
-   post, run, tick,       |   Dispatcher   | signal|   Timer        |
+   post, run, tick,       |   Dispatcher   | signal|   Timer, Log   |
    queries, snapshot      |                |       |   user types   |
                           +----------------+       +----------------+
 ```
@@ -94,7 +95,7 @@ The modules are plain files in the repository root; there is no package.
 | `hsmd_reader.py` | Opens the document with the binding and builds the model. |
 | `hsmd_step.py` | The step of one machine for one event. Keeps the active configuration. |
 | `hsmd_actions.py` | Compiles and runs the action and guard text. |
-| `hsmd_components.py` | The `Component` base class, the registry of types, the `Timer`. |
+| `hsmd_components.py` | The `Component` base class, the registry of types, the standard types `Timer` and `Log`. |
 
 The application talks to the `Dispatcher` only. The text of the diagram
 calls the components; the components answer with signals, which return to
@@ -178,22 +179,29 @@ The step of one machine for one event (PNST 984, 7.4.6.1):
 
 1. **Select.** Starting from the active simple state and moving outwards,
    look for a transition or an internal transition whose trigger matches and
-   whose guard is true. In one state the candidates are tried in the
-   document order: the named triggers, then `ANY`; a guard `[else]` is
-   tried last. The first enabled one fires. If another candidate of the same
-   state is also enabled, the trace reports the ambiguity.
+   whose guard is true. In one state the candidates are its internal
+   transitions in the order of the text, then its outgoing transitions in
+   the document order. Those with the name of the event are tried first,
+   then those with `ANY` or `UNKNOWN`; inside each group a guard `[else]`
+   is tried last. The first enabled one fires. If another candidate of the
+   same group is also enabled, the trace reports the ambiguity.
 2. **Execute.** An internal transition runs its behaviour only. A transition
    leaves the states from the active one up to, not including, the owner,
    runs its behaviour and enters the states down to the target. With
    `actionFirst` the behaviour precedes the exit actions, with `exitFirst`
    it follows them (PNST 984, 7.6.6.7).
 3. **Settle.** Entering a composite state continues along its initial
-   pseudostate until a simple state is reached. A choice is resolved when it
-   is reached, by the same candidate rule; a choice with no true branch is
-   an error.
+   pseudostate until a simple state is reached. A pseudostate is a position:
+   the states around it are entered before it is processed. A choice is
+   resolved when it is reached, by the same candidate rule, and its branch
+   is executed as a transition of its own: with `actionFirst` the order is
+   first behaviour, exit, choice, second behaviour, entry. A choice with no
+   true branch is an error.
 4. **Complete.** If the new state has a transition without a trigger, a
-   completion event is raised for it. A final state on the top level
-   finishes the machine.
+   completion event is raised for it; for a composite state it is raised
+   when the final state inside it is reached. The completion event belongs
+   to its machine and its state and is offered to the transitions without a
+   trigger only. A final state on the top level finishes the machine.
 5. **Propagate.** See below.
 
 A transition from a state to itself leaves and enters the state. A
@@ -253,6 +261,10 @@ The text is compiled when the document is loaded, so a syntax error is
 found before the machine starts. The diagram is code and is trusted like
 code: the dispatcher does not restrict what the text may do.
 
+A name assigned by the text stays visible to the later text of the same
+machine, but it is not a part of the snapshot: the values to keep belong to
+the components.
+
 ## Components
 
 A component is a Python object with signals (the events it may raise),
@@ -268,7 +280,8 @@ available to the text).
 A component type is a subclass of `Component` registered under its `type`
 name. The application registers its types before the document is loaded; a
 declaration with an unknown type is an error. The parameters of the
-declaration other than `type` and `priority` are passed to the type.
+declaration other than `type` and `priority` are passed to the type as
+strings. The identifier `event` is reserved.
 
 The signals, methods and variables of a type can be exported as a platform
 description in the form used by the Cyberiada editors, so the calls can be
@@ -290,8 +303,29 @@ dispatcher provides the same one:
 
 The dispatcher creates no threads. The application calls `tick()`; every
 component compares the clock with its deadlines and raises its signals,
-then the queue is processed. The clock is a parameter of the dispatcher:
-the tests pass their own and advance the time by hand.
+then the queue is processed. The clock is a parameter of the dispatcher, a
+function that returns seconds like `time.monotonic`: the tests pass their
+own and advance the time by hand.
+
+The timer counts in whole milliseconds. It raises one `timeout` in a
+`tick()` at most and counts the next interval from that tick, so a late
+`tick()` does not produce a burst. `enable()` and `reset()` start the count
+again; `disable()` keeps the time left in `difference`.
+
+## Printing
+
+The diagram prints through the standard component type `Log`, declared like
+any other component:
+
+```
+CGML_COMPONENT log             entry/
+type/ Log                      log.print('speed is', event.speed)
+```
+
+`print(...)` joins its values into one line. The line becomes a record of
+the trace and is written to the output stream of the dispatcher - the
+standard error stream unless the application passes another one. The text
+of a diagram does not call the Python `print`.
 
 ## Outcomes
 
@@ -299,20 +333,36 @@ Processing an event produces an outcome for each machine:
 
 | Status | Meaning |
 |---|---|
-| `fired` | one or more transitions were executed; the outcome lists them |
+| `fired` | one or more transitions were executed; the outcome lists them, the branch of a choice included |
 | `rejected` | a trigger matched, but every guard was false |
 | `dropped` | no trigger of the active states matched (PNST 984, 7.4.6.1) |
 
-`run()` returns the outcomes of the processed events; `send()` posts one
-event, processes the queue and returns the outcome of that event.
+`run()` returns the outcomes of the processed events, the completion
+events included (their name is empty); `send()` posts one event, processes
+the queue and returns the outcome of that event.
 
 ## The trace
 
 The trace is a function supplied by the application. The dispatcher calls
-it with a record for: an event taken from the queue, a guard evaluated and
-its value, a behaviour block executed, a state left, a state entered, a
-signal raised, an ambiguity, an outcome. The tests compare the trace with
-the expected one.
+it with a record - a tuple, the kind first:
+
+| Record | When |
+|---|---|
+| `post`, name, priority | an event is put into the queue |
+| `event`, name | an event is taken from the queue |
+| `guard`, machine, transition, text, value | a guard is evaluated |
+| `ambiguous`, machine, chosen, others | several candidates were enabled |
+| `fire`, machine, transition | a transition is executed |
+| `exit`, machine, state | a state is left, before its exit actions |
+| `enter`, machine, state | a state is entered, before its entry actions |
+| `completion`, machine, state | a completion event is raised |
+| `finished`, machine | the machine has reached its final state |
+| `print`, component, line | a message of the diagram |
+| `outcome`, machine, status, transitions | the result of a step |
+| `error`, message | the dispatcher is stopped |
+
+An internal transition is named by its state and its number in the text:
+`a#1`. The tests compare the trace with the expected one.
 
 ## Errors
 
@@ -327,10 +377,12 @@ current stage, a syntax error in the text - are raised when it is loaded.
 
 ## The snapshot
 
-`snapshot()` returns the execution state as plain data: the active
-configuration of every machine, the queue, the state of the components
-(each component reports its own). `restore()` continues from it and clears
-the stopped state. The application decides where the snapshot is stored and
+`snapshot()` returns the execution state as a dictionary of plain data:
+the version of the format, the active vertex and the finished flag of every
+machine, the queue, the waiting completion events, the data of the
+components (each component reports its own; a timer reports the time left,
+not the deadline). `restore()` continues from it, in the same dispatcher or
+in a new one with the same document, and clears the stopped state. The application decides where the snapshot is stored and
 when it is taken; the natural moment is after `run()`, when the queue is
 empty.
 
@@ -338,9 +390,10 @@ empty.
 
 `Dispatcher` (`hsmd.py`):
 
-* `Dispatcher(path, clock=None, trace=None)` - load the document, create
-  the components;
-* `start()` - enter the initial configuration of every machine;
+* `Dispatcher(path, clock=None, trace=None, output=None)` - load the
+  document, create the components;
+* `start()` - enter the initial configuration of every machine, process
+  the queue, return the outcomes;
 * `post(name, priority=0, **parameters)` - put an event into the queue;
 * `run()` - process the queue until it is empty, return the outcomes;
 * `send(name, **parameters)` - `post()` and `run()`, return the outcome of
@@ -354,9 +407,23 @@ empty.
 * `snapshot()`, `restore(data)`;
 * `stopped` - set after an error.
 
+A machine is named by its identifier or its name; without the argument the
+first machine of the document is meant.
+
+`Event`: `name`, `priority`, `parameters`; the parameters are attributes
+too. `Outcome`: `event`, `status`, `transitions`, and `results` - the
+status and the transitions of each machine.
+
+The errors are subclasses of `DispatcherError`: `DocumentError` (the
+document cannot be loaded), `ActionError` (the text has failed; `where`,
+`line`, `error`), `ExecutionError` (the diagram cannot be executed
+further), `StoppedError` (the dispatcher is stopped).
+
 `Component` (`hsmd_components.py`):
 
 * `register(type, cls)` - add a component type to the registry;
+* `Component(ident, dispatcher, **parameters)` - the constructor a type
+  keeps; `id`, `dispatcher`, `parameters`;
 * `Component.priority` - the default priority of the type;
 * `Component.signal(name, **parameters)` - raise the event `<id>.<name>`;
 * `Component.tick(now)` - called from `Dispatcher.tick()`;
@@ -366,7 +433,7 @@ empty.
 
 | Stage | Elements |
 |---|---|
-| 1 | simple and composite states with one region, initial and final pseudostates, choice, `entry/` and `exit/`, internal transitions, guards and `[else]`, transitions without a trigger, `transitionOrder`, `eventPropagation` with `propagate` and `block`, `ANY`, `UNKNOWN`, several machines, components, the Timer, priorities, outcomes, the trace, the snapshot |
+| 1 | simple and composite states with one region, initial and final pseudostates, choice, `entry/` and `exit/`, internal transitions, guards and `[else]`, transitions without a trigger, `transitionOrder`, `eventPropagation` with `propagate` and `block`, `ANY`, `UNKNOWN`, several machines, components, the Timer, the Log, priorities, outcomes, the trace, the snapshot |
 | 2 | shallow and deep history, `defer`, entry and exit points, submachine states, terminate |
 | 3 | orthogonal regions and `do/` activities |
 
@@ -375,18 +442,17 @@ Stage 3 needs the support of the regions and of the `do/` blocks in
 
 ## Testing
 
-A test loads a diagram, posts a sequence of events and compares the trace
-and the outcomes with the expected ones; the clock belongs to the test. The
-diagrams are the ones of `cyberiadaml-compat-tests` and the examples of
-this project, one per rule of this document.
+A test is a diagram (`test/graphs`), a scenario (`test/scripts`) and the
+expected output (`test/good`). The scenario is a list of commands - load,
+start, post, send, run, clock, tick, the queries, snapshot, restore; the
+output is the trace and the outcomes. The clock and the output stream
+belong to the runner, `test/run.py`. There is a diagram for each rule of
+this document; every diagram is checked with the validator of
+`cyberiadaml-compat-tests` first.
 
 ## Open questions
 
-* the order of the behaviour of the two segments around a choice under
-  `actionFirst`; proposed: first segment, exit, choice, second segment,
-  entry;
 * the place of the deferred events in the queue (stage 2);
 * the execution of `do/`: a synchronous call or an activity with a
   completion event (stage 3);
-* the format of the snapshot data;
 * the form of the exported platform description.
