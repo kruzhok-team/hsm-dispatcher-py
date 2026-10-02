@@ -8,11 +8,10 @@ PNST 1044-2025) and are executed with the semantics of PNST 984-2024. The
 dispatcher is a general purpose library: an application loads a diagram,
 supplies the components the diagram works with, and feeds events.
 
-The dispatcher is not a code generator (`hsm-to-python` stays the tool for
-standalone programs). It has no event loop and no threads of its own, and it
-contains nothing specific to a particular application. It depends on the
-`CyberiadaML` binding (`libcyberiadamlpp-py`) and on the Python 3 standard
-library only.
+The dispatcher is not a code generator. It has no event loop and no threads
+of its own, and it contains nothing specific to a particular application.
+It depends on the `CyberiadaML` binding (`libcyberiadamlpp-py`) and on
+the Python 3 standard library only.
 
 ## Usage requirements
 
