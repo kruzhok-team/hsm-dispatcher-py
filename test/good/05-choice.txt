@@ -1,0 +1,77 @@
+> load 05-choice.graphml
+> start
+  fire G init-a
+  enter G a
+  print log enter A
+> send go
+  post go 0
+  event go
+  fire G a-ch
+  print log first
+  exit G a
+  print log exit A
+  guard G ch-b n.value > 1 False
+  fire G ch-c
+  enter G c
+  print log enter C
+  outcome G fired a-ch ch-c
+= go fired a-ch ch-c
+> send back
+  post back 0
+  event back
+  fire G c-a
+  exit G c
+  print log exit C
+  enter G a
+  print log enter A
+  outcome G fired c-a
+= back fired c-a
+> send inc
+  post inc 0
+  event inc
+  fire G a#1
+  outcome G fired a#1
+= inc fired a#1
+> send inc
+  post inc 0
+  event inc
+  fire G a#1
+  outcome G fired a#1
+= inc fired a#1
+> send go
+  post go 0
+  event go
+  fire G a-ch
+  print log first
+  exit G a
+  print log exit A
+  guard G ch-b n.value > 1 True
+  fire G ch-b
+  print log second
+  enter G b
+  print log enter B
+  outcome G fired a-ch ch-b
+= go fired a-ch ch-b
+> send back
+  post back 0
+  event back
+  fire G b-a
+  exit G b
+  print log exit B
+  enter G a
+  print log enter A
+  outcome G fired b-a
+= back fired b-a
+> error send bad
+  post bad 0
+  event bad
+  fire G a-ch2
+  exit G a
+  print log exit A
+  guard G ch2-b n.value > 100 False
+  error machine 'G', choice 'ch2': no true branch
+! ExecutionError: machine 'G', choice 'ch2': no true branch
+> stopped
+= True
+> error send go
+! StoppedError: the dispatcher is stopped

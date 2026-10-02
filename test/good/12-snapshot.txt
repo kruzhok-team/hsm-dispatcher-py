@@ -1,0 +1,40 @@
+> load 12-snapshot.graphml
+> start
+  fire G init-a
+  enter G a
+> send inc
+  post inc 0
+  event inc
+  fire G a#1
+  outcome G fired a#1
+= inc fired a#1
+> clock 40
+> post inc
+  post inc 0
+> snapshot
+= {'version': 1, 'machines': {'G': {'active': 'a', 'finished': False}}, 'queue': [{'name': 'inc', 'priority': 0, 'parameters': {}}], 'completions': [], 'components': {'G': {'log': None, 'n': 1, 't': {'interval': 100, 'enabled': True, 'remaining': 60}}}}
+> load 12-snapshot.graphml
+> restore
+  post inc 0
+> states
+= a
+> run
+  event inc
+  fire G a#1
+  outcome G fired a#1
+= inc fired a#1
+> clock 59
+> tick
+> clock 1
+> tick
+  post t.timeout 0
+  event t.timeout
+  guard G a-b n.value > 1 True
+  fire G a-b
+  exit G a
+  enter G b
+  print log enter B
+  outcome G fired a-b
+= t.timeout fired a-b
+> states
+= b

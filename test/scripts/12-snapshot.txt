@@ -1,0 +1,16 @@
+# the snapshot and the continuation in a new dispatcher
+load 12-snapshot.graphml
+start
+send inc
+clock 40
+post inc
+snapshot
+load 12-snapshot.graphml
+restore
+states
+run
+clock 59
+tick
+clock 1
+tick
+states

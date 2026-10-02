@@ -1,0 +1,25 @@
+> load 03-order-action.graphml
+> start
+  fire G init-p
+  enter G p
+  print log enter P
+  fire G pinit-a
+  enter G a
+  print log enter A
+> send go
+  post go 0
+  event go
+  fire G a-b
+  print log action
+  exit G a
+  print log exit A
+  exit G p
+  print log exit P
+  enter G q
+  print log enter Q
+  enter G b
+  print log enter B
+  outcome G fired a-b
+= go fired a-b
+> states
+= q b

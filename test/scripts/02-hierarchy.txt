@@ -1,0 +1,22 @@
+# initial pseudostates, the inner state first, the owner of a transition
+load 02-hierarchy.graphml
+start
+states
+triggers
+# the inner state handles the event first
+send ping
+send next
+# B has no handler: the enclosing state handles it
+send ping
+# composite to its substate: P is not left
+send home
+# a state to itself: left and entered
+send again
+send next
+# substate to its composite: P is not left, the default entry
+send up
+# from the composite: the inner state is left first
+send leave
+# into a nested state: P is entered, the initial pseudostate is not used
+send deep
+states

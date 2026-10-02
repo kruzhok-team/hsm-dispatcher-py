@@ -1,0 +1,63 @@
+> load 01-flat.graphml
+> start
+  fire G init-a
+  print log initial
+  enter G a
+  print log enter A
+> states
+= a
+> triggers
+= go
+> send go
+  post go 0
+  event go
+  fire G a-b
+  print log go
+  exit G a
+  print log exit A
+  enter G b
+  print log enter B
+  outcome G fired a-b
+= go fired a-b
+> send nothing
+  post nothing 0
+  event nothing
+  outcome G dropped
+= nothing dropped
+> send back
+  post back 0
+  event back
+  fire G b-a
+  exit G b
+  print log exit B
+  enter G a
+  print log enter A
+  outcome G fired b-a
+= back fired b-a
+> send go
+  post go 0
+  event go
+  fire G a-b
+  print log go
+  exit G a
+  print log exit A
+  enter G b
+  print log enter B
+  outcome G fired a-b
+= go fired a-b
+> send stop
+  post stop 0
+  event stop
+  fire G b-fin
+  exit G b
+  print log exit B
+  finished G
+  outcome G fired b-fin
+= stop fired b-fin
+> finished
+= True
+> send go
+  post go 0
+  event go
+  outcome G dropped
+= go dropped

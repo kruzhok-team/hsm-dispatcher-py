@@ -1,0 +1,11 @@
+# two machines of one document
+load 11-machines.graphml
+start
+states M1
+states M2
+send go
+clock 100
+# the signal of a component of M1 is seen by M2
+tick
+states First
+states Second

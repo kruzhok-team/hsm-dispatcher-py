@@ -1,0 +1,26 @@
+# the errors of the text and of the document
+load 14-errors.graphml
+start
+error send bad
+stopped
+error send go
+error post go
+load 14-errors.graphml
+start
+error send wrong
+load 14-errors.graphml
+start
+error send need
+load 14-errors.graphml
+start
+snapshot
+error send go
+stopped
+restore
+stopped
+states
+send nothing
+error load 14-errors-type.graphml
+error load 14-errors-syntax.graphml
+error load 14-errors-history.graphml
+error load nosuch.graphml

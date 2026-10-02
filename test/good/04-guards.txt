@@ -1,0 +1,93 @@
+> load 04-guards.graphml
+> start
+  fire G init-a
+  enter G a
+> send try
+  post try 0
+  event try
+  guard G a-b#2 n.value > 5 False
+  outcome G rejected
+= try rejected
+> send pick
+  post pick 0
+  event pick
+  guard G a-b#3 n.value > 0 False
+  fire G a-c#2
+  exit G a
+  enter G c
+  outcome G fired a-c#2
+= pick fired a-c#2
+> send back
+  post back 0
+  event back
+  fire G c-a
+  exit G c
+  enter G a
+  outcome G fired c-a
+= back fired c-a
+> send inc
+  post inc 0
+  event inc
+  fire G a#1
+  outcome G fired a#1
+= inc fired a#1
+> send pick
+  post pick 0
+  event pick
+  guard G a-b#3 n.value > 0 True
+  fire G a-b#3
+  exit G a
+  enter G b
+  outcome G fired a-b#3
+= pick fired a-b#3
+> send back
+  post back 0
+  event back
+  fire G b-a
+  exit G b
+  enter G a
+  outcome G fired b-a
+= back fired b-a
+> send inc
+  post inc 0
+  event inc
+  fire G a#1
+  outcome G fired a#1
+= inc fired a#1
+> send go
+  post go 0
+  event go
+  guard G a-b n.value > 2 False
+  guard G a-c n.value > 1 True
+  fire G a-c
+  exit G a
+  enter G c
+  outcome G fired a-c
+= go fired a-c
+> send back
+  post back 0
+  event back
+  fire G c-a
+  exit G c
+  enter G a
+  outcome G fired c-a
+= back fired c-a
+> send inc
+  post inc 0
+  event inc
+  fire G a#1
+  outcome G fired a#1
+= inc fired a#1
+> send go
+  post go 0
+  event go
+  guard G a-b n.value > 2 True
+  guard G a-c n.value > 1 True
+  ambiguous G a-b a-c
+  fire G a-b
+  exit G a
+  enter G b
+  outcome G fired a-b
+= go fired a-b
+> states
+= b

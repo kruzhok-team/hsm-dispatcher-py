@@ -1,0 +1,22 @@
+# the Timer under the test clock, the priority of a component
+load 10-timer.graphml
+start
+clock 50
+tick
+send show
+clock 50
+# t2 raises first, t1 has the higher priority
+tick
+send stop
+clock 100
+tick
+send show
+# enable starts the count again, reset too
+send resume
+clock 50
+send reset
+send show
+clock 50
+tick
+clock 50
+tick

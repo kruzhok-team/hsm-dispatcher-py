@@ -1,0 +1,60 @@
+> load 06-completion.graphml
+> start
+  fire G init-a
+  enter G a
+  print log enter A
+  completion G a
+  fire G a-b
+  print log a is complete
+  exit G a
+  print log exit A
+  enter G b
+  print log enter B
+  fire G binit-b1
+  enter G b1
+  print log enter B1
+  outcome G fired a-b
+= completion fired a-b
+> states
+= b b1
+> send done
+  post done 0
+  event done
+  fire G b1-bfin
+  exit G b1
+  print log exit B1
+  completion G b
+  outcome G fired b1-bfin
+  fire G b-c
+  print log b is complete
+  exit G b
+  print log exit B
+  enter G c
+  print log enter C
+  completion G c
+  outcome G fired b-c
+  guard G c-a 1 > 2 False
+  outcome G rejected
+= done fired b1-bfin
+> states
+= c
+> finished
+= False
+> send end
+  post end 0
+  event end
+  fire G c-fin
+  exit G c
+  print log exit C
+  finished G
+  outcome G fired c-fin
+= end fired c-fin
+> finished
+= True
+> states
+=
+> send done
+  post done 0
+  event done
+  outcome G dropped
+= done dropped

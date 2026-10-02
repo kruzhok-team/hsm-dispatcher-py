@@ -1,0 +1,6 @@
+# the Log component: the trace and the output stream
+load 13-log.graphml
+start
+output
+send say text="hello world"
+output

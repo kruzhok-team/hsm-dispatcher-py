@@ -1,0 +1,39 @@
+> load 11-machines.graphml
+> start
+  fire M1 init-a
+  enter M1 a
+  fire M2 init2-x
+  enter M2 x
+> states M1
+= a
+> states M2
+= x
+> send go
+  post go 0
+  event go
+  fire M1 a-b
+  print log go in M1
+  exit M1 a
+  enter M1 b
+  outcome M1 fired a-b
+  fire M2 x-y
+  print log2 go in M2
+  exit M2 x
+  enter M2 y
+  outcome M2 fired x-y
+= go fired a-b x-y
+> clock 100
+> tick
+  post timer1.timeout 0
+  event timer1.timeout
+  fire M1 b#1
+  print log timeout in M1
+  outcome M1 fired b#1
+  fire M2 y#1
+  print log2 timeout in M2
+  outcome M2 fired y#1
+= timer1.timeout fired b#1 y#1
+> states First
+= b
+> states Second
+= y

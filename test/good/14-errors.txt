@@ -1,0 +1,70 @@
+> load 14-errors.graphml
+> start
+  fire G init-a
+  enter G a
+> error send bad
+  post bad 0
+  event bad
+  fire G a#1
+  error machine 'G', state 'a', internal transition 1, line 1: AttributeError: 'Log' object has no attribute 'prnt'
+! ActionError: machine 'G', state 'a', internal transition 1, line 1: AttributeError: 'Log' object has no attribute 'prnt'
+> stopped
+= True
+> error send go
+! StoppedError: the dispatcher is stopped
+> error post go
+! StoppedError: the dispatcher is stopped
+> load 14-errors.graphml
+> start
+  fire G init-a
+  enter G a
+> error send wrong
+  post wrong 0
+  event wrong
+  error machine 'G', state 'a', internal transition 2, guard, line 1: NameError: name 'nosuch' is not defined
+! ActionError: machine 'G', state 'a', internal transition 2, guard, line 1: NameError: name 'nosuch' is not defined
+> load 14-errors.graphml
+> start
+  fire G init-a
+  enter G a
+> error send need
+  post need 0
+  event need
+  fire G a#3
+  error machine 'G', state 'a', internal transition 3, line 1: AttributeError: the event 'need' has no parameter 'amount'
+! ActionError: machine 'G', state 'a', internal transition 3, line 1: AttributeError: the event 'need' has no parameter 'amount'
+> load 14-errors.graphml
+> start
+  fire G init-a
+  enter G a
+> snapshot
+= {'version': 1, 'machines': {'G': {'active': 'a', 'finished': False}}, 'queue': [], 'completions': [], 'components': {'G': {'log': None}}}
+> error send go
+  post go 0
+  event go
+  fire G a-b
+  exit G a
+  enter G b
+  print log one
+  error machine 'G', state 'b', entry, line 2: NameError: name 'undefined_name' is not defined
+! ActionError: machine 'G', state 'b', entry, line 2: NameError: name 'undefined_name' is not defined
+> stopped
+= True
+> restore
+> stopped
+= False
+> states
+= a
+> send nothing
+  post nothing 0
+  event nothing
+  outcome G dropped
+= nothing dropped
+> error load 14-errors-type.graphml
+! DocumentError: machine 'G', component 'x': unknown type 'Nosuch'
+> error load 14-errors-syntax.graphml
+! DocumentError: machine 'G', state 'a', entry, line 2: invalid syntax
+> error load 14-errors-history.graphml
+! DocumentError: machine 'G', element 'h': shallow history pseudostate is not supported
+> error load nosuch.graphml
+! DocumentError: File Exception: Cannot open file nosuch.graphml

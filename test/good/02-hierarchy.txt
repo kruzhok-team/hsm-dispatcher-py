@@ -1,0 +1,103 @@
+> load 02-hierarchy.graphml
+> start
+  fire G init-p
+  enter G p
+  print log enter P
+  fire G pinit-a
+  enter G a
+  print log enter A
+> states
+= p a
+> triggers
+= ping next again leave home
+> send ping
+  post ping 0
+  event ping
+  fire G a#1
+  print log ping in A
+  outcome G fired a#1
+= ping fired a#1
+> send next
+  post next 0
+  event next
+  fire G a-b
+  exit G a
+  print log exit A
+  enter G b
+  print log enter B
+  outcome G fired a-b
+= next fired a-b
+> send ping
+  post ping 0
+  event ping
+  fire G p#1
+  print log ping in P
+  outcome G fired p#1
+= ping fired p#1
+> send home
+  post home 0
+  event home
+  fire G p-a
+  exit G b
+  print log exit B
+  enter G a
+  print log enter A
+  outcome G fired p-a
+= home fired p-a
+> send again
+  post again 0
+  event again
+  fire G a-a
+  exit G a
+  print log exit A
+  enter G a
+  print log enter A
+  outcome G fired a-a
+= again fired a-a
+> send next
+  post next 0
+  event next
+  fire G a-b
+  exit G a
+  print log exit A
+  enter G b
+  print log enter B
+  outcome G fired a-b
+= next fired a-b
+> send up
+  post up 0
+  event up
+  fire G b-p
+  exit G b
+  print log exit B
+  fire G pinit-a
+  enter G a
+  print log enter A
+  outcome G fired b-p
+= up fired b-p
+> send leave
+  post leave 0
+  event leave
+  fire G p-q
+  exit G a
+  print log exit A
+  exit G p
+  print log exit P
+  enter G q
+  print log enter Q
+  outcome G fired p-q
+= leave fired p-q
+> send deep
+  post deep 0
+  event deep
+  fire G q-b
+  exit G q
+  print log exit Q
+  enter G p
+  print log enter P
+  enter G b
+  print log enter B
+  outcome G fired q-b
+= deep fired q-b
+> states
+= p b

@@ -1,0 +1,12 @@
+# transitions, the order of exit and entry, a dropped event
+load 01-flat.graphml
+start
+states
+triggers
+send go
+send nothing
+send back
+send go
+send stop
+finished
+send go

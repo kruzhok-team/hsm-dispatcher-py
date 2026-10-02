@@ -1,0 +1,15 @@
+# the propagate flag under the default block
+load 07-propagation.graphml
+start
+# no flag: blocked
+send e4
+states
+# case 1: an internal transition, then the enclosing state
+send e1
+send back
+# case 2: a transition inside A, then the enclosing state
+send e2
+send back
+# case 3: a transition out of A, the enclosing state is not active
+send e3
+states

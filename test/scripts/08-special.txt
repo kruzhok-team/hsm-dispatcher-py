@@ -1,0 +1,15 @@
+# ANY and UNKNOWN
+load 08-special.graphml
+start
+triggers
+# the named trigger first
+send known
+# ANY of the inner state hides the handler of A
+send out
+states
+# not in the pool: UNKNOWN
+send strange
+send next
+# ANY propagate: the handler of A fires too
+send out
+states

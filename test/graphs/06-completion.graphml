@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <data key="gFormat">Cyberiada-GraphML-1.0</data>
+  <key id="gFormat" for="graphml" attr.name="format" attr.type="string"/>
+  <key id="dName" for="graph" attr.name="name" attr.type="string"/>
+  <key id="dName" for="node" attr.name="name" attr.type="string"/>
+  <key id="dStateMachine" for="graph" attr.name="stateMachine"/>
+  <key id="dRegion" for="graph" attr.name="region"/>
+  <key id="dSubmachineState" for="node" attr.name="submachineState" attr.type="string"/>
+  <key id="dGeometry" for="graph" attr.name="geometry"/>
+  <key id="dGeometry" for="node" attr.name="geometry"/>
+  <key id="dGeometry" for="edge" attr.name="geometry"/>
+  <key id="dSourcePoint" for="edge" attr.name="sourcePoint"/>
+  <key id="dTargetPoint" for="edge" attr.name="targetPoint"/>
+  <key id="dLabelGeometry" for="edge" attr.name="labelGeometry"/>
+  <key id="dNote" for="node" attr.name="note" attr.type="string"/>
+  <key id="dVertex" for="node" attr.name="vertex" attr.type="string"/>
+  <key id="dData" for="node" attr.name="data" attr.type="string"/>
+  <key id="dData" for="edge" attr.name="data" attr.type="string"/>
+  <key id="dPivot" for="edge" attr.name="pivot" attr.type="string"/>
+  <key id="dChunk" for="edge" attr.name="chunk" attr.type="string"/>
+  <key id="dCollapsed" for="node" attr.name="collapsed"/>
+  <key id="dMarkup" for="node" attr.name="markup" attr.type="string"/>
+  <key id="dColor" for="node" attr.name="color" attr.type="string"/>
+  <key id="dColor" for="edge" attr.name="color" attr.type="string"/>
+  <key id="dFormalName" for="graph" attr.name="formalName" attr.type="string"/>
+  <key id="dFormalName" for="node" attr.name="formalName" attr.type="string"/>
+  <graph id="G" edgedefault="directed">
+    <data key="dStateMachine"/>
+    <data key="dName">Completion</data>
+    <node id="nMeta">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_META</data>
+      <data key="dData">standardVersion/ 1.0</data>
+    </node>
+    <node id="c_log">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT log</data>
+      <data key="dData">type/ Log</data>
+    </node>
+    <node id="init">
+      <data key="dVertex">initial</data>
+    </node>
+    <node id="a">
+      <data key="dName">A</data>
+      <data key="dData">entry/
+log.print('enter A')
+
+exit/
+log.print('exit A')</data>
+    </node>
+    <node id="b">
+      <data key="dName">B</data>
+      <data key="dData">entry/
+log.print('enter B')
+
+exit/
+log.print('exit B')</data>
+      <graph id="b:" edgedefault="directed">
+        <data key="dRegion"/>
+        <node id="binit">
+          <data key="dVertex">initial</data>
+        </node>
+        <node id="b1">
+          <data key="dName">B1</data>
+          <data key="dData">entry/
+log.print('enter B1')
+
+exit/
+log.print('exit B1')</data>
+        </node>
+        <node id="bfin">
+          <data key="dVertex">final</data>
+        </node>
+      </graph>
+    </node>
+    <node id="c">
+      <data key="dName">C</data>
+      <data key="dData">entry/
+log.print('enter C')
+
+exit/
+log.print('exit C')</data>
+    </node>
+    <node id="fin">
+      <data key="dVertex">final</data>
+    </node>
+    <edge id="init-a" source="init" target="a"/>
+    <edge id="a-b" source="a" target="b">
+      <data key="dData">/
+log.print('a is complete')</data>
+    </edge>
+    <edge id="binit-b1" source="binit" target="b1"/>
+    <edge id="b1-bfin" source="b1" target="bfin">
+      <data key="dData">done/</data>
+    </edge>
+    <edge id="b-c" source="b" target="c">
+      <data key="dData">/
+log.print('b is complete')</data>
+    </edge>
+    <edge id="c-a" source="c" target="a">
+      <data key="dData">[1 &gt; 2]/</data>
+    </edge>
+    <edge id="c-fin" source="c" target="fin">
+      <data key="dData">end/</data>
+    </edge>
+  </graph>
+</graphml>

@@ -1,0 +1,11 @@
+# transitions without a trigger, final states
+load 06-completion.graphml
+start
+states
+send done
+states
+finished
+send end
+finished
+states
+send done
