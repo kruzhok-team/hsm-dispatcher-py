@@ -13,10 +13,11 @@ documentation -- under the GNU Free Documentation License (version 1.3).
 
 The documentation is located in the `docs` directory and contains:
 
-* The architecture - `ARCHITECTURE.md`
+* The architecture - `ARCHITECTURE.md`: the usage requirements, the
+  references to the standards PNST 984-2024 and PNST 1044-2025, the core
+  specifications of the dispatcher
 
-The detailed specification of the interpreter and the code follow the
-architecture and are not written yet.
+The code follows the architecture and is not written yet.
 
 ## Requirements
 
