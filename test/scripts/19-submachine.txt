@@ -1,0 +1,23 @@
+# a submachine state inlined from the same document
+load 19-submachine.graphml
+start
+states
+states M2
+triggers
+# the host leaves through Done; the worker itself reaches its exit point
+send finish
+states
+states M2
+finished M2
+# the external library, with a nested submachine state
+load 19-submachine-ext.graphml
+start
+states
+send go
+states
+send fin
+states
+error load 19-submachine-cycle.graphml
+error load 19-submachine-point.graphml
+error load 19-submachine-type.graphml
+error load 19-submachine-noinit.graphml

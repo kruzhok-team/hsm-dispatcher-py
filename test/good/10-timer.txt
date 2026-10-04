@@ -13,8 +13,8 @@
 = show fired a#6
 > clock 50
 > tick
-  post t2.timeout 0
-  post t1.timeout 10
+  post t2.timeout 0 G
+  post t1.timeout 10 G
   event t1.timeout
   fire G a#1
   print log t1
@@ -33,7 +33,7 @@
 = stop fired a#3
 > clock 100
 > tick
-  post t2.timeout 0
+  post t2.timeout 0 G
   event t2.timeout
   fire G a#2
   print log t2 100
@@ -68,7 +68,7 @@
 = show fired a#6
 > clock 50
 > tick
-  post t1.timeout 10
+  post t1.timeout 10 G
   event t1.timeout
   fire G a#1
   print log t1
@@ -76,7 +76,7 @@
 = t1.timeout fired a#1
 > clock 50
 > tick
-  post t2.timeout 0
+  post t2.timeout 0 G
   event t2.timeout
   fire G a#2
   print log t2 100

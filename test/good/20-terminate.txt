@@ -1,0 +1,22 @@
+> load 20-terminate.graphml
+> start
+  fire G init-a
+  enter G a
+  print log enter A
+> send kill
+  post kill 0
+  event kill
+  fire G a-t
+  print log bye
+  terminated G
+  outcome G fired a-t
+= kill fired a-t
+> finished
+= True
+> states
+=
+> send kill
+  post kill 0
+  event kill
+  outcome G dropped
+= kill dropped

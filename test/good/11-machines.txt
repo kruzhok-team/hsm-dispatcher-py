@@ -13,26 +13,39 @@
   event go
   fire M1 a-b
   print log go in M1
+  post bus.ping 0
   exit M1 a
   enter M1 b
   outcome M1 fired a-b
   fire M2 x-y
-  print log2 go in M2
+  print log go in M2
   exit M2 x
   enter M2 y
   outcome M2 fired x-y
+  event bus.ping
+  fire M1 b#2
+  print log M1 sees from M1
+  outcome M1 fired b#2
+  fire M2 y#2
+  print log M2 sees from M1
+  outcome M2 fired y#2
 = go fired a-b x-y
 > clock 100
 > tick
-  post timer1.timeout 0
+  post timer1.timeout 0 M1
   event timer1.timeout
   fire M1 b#1
   print log timeout in M1
   outcome M1 fired b#1
+= timer1.timeout fired b#1
+> clock 50
+> tick
+  post timer1.timeout 0 M2
+  event timer1.timeout
   fire M2 y#1
-  print log2 timeout in M2
+  print log timeout in M2
   outcome M2 fired y#1
-= timer1.timeout fired b#1 y#1
+= timer1.timeout fired y#1
 > states First
 = b
 > states Second

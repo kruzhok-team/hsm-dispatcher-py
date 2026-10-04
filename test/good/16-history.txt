@@ -1,0 +1,207 @@
+> load 16-history.graphml
+> start
+  fire G init-p
+  enter G p
+  print log enter P
+  fire G pinit-a
+  enter G a
+  print log enter A
+> send next
+  post next 0
+  event next
+  fire G a-b
+  exit G a
+  print log exit A
+  enter G b
+  print log enter B
+  outcome G fired a-b
+= next fired a-b
+> send out
+  post out 0
+  event out
+  fire G p-q
+  exit G b
+  print log exit B
+  exit G p
+  print log exit P
+  enter G q
+  print log enter Q
+  outcome G fired p-q
+= out fired p-q
+> send back
+  post back 0
+  event back
+  fire G q-h
+  exit G q
+  print log exit Q
+  enter G p
+  print log enter P
+  history G h b
+  enter G b
+  print log enter B
+  outcome G fired q-h
+= back fired q-h
+> send fin
+  post fin 0
+  event fin
+  fire G b-pfin
+  exit G b
+  print log exit B
+  outcome G fired b-pfin
+= fin fired b-pfin
+> send out
+  post out 0
+  event out
+  fire G p-q
+  exit G p
+  print log exit P
+  enter G q
+  print log enter Q
+  outcome G fired p-q
+= out fired p-q
+> send back
+  post back 0
+  event back
+  fire G q-h
+  exit G q
+  print log exit Q
+  enter G p
+  print log enter P
+  fire G h-a
+  enter G a
+  print log enter A
+  outcome G fired q-h h-a
+= back fired q-h h-a
+> send out
+  post out 0
+  event out
+  fire G p-q
+  exit G a
+  print log exit A
+  exit G p
+  print log exit P
+  enter G q
+  print log enter Q
+  outcome G fired p-q
+= out fired p-q
+> send deep
+  post deep 0
+  event deep
+  fire G q-dh
+  exit G q
+  print log exit Q
+  enter G d
+  print log enter D
+  fire G dinit-d1
+  enter G d1
+  print log enter D1
+  fire G d1init-x
+  enter G x
+  print log enter X
+  outcome G fired q-dh
+= deep fired q-dh
+> send step
+  post step 0
+  event step
+  fire G x-y
+  exit G x
+  print log exit X
+  enter G y
+  print log enter Y
+  outcome G fired x-y
+= step fired x-y
+> send out2
+  post out2 0
+  event out2
+  fire G d-q
+  exit G y
+  print log exit Y
+  exit G d1
+  print log exit D1
+  exit G d
+  print log exit D
+  enter G q
+  print log enter Q
+  outcome G fired d-q
+= out2 fired d-q
+> send deep
+  post deep 0
+  event deep
+  fire G q-dh
+  exit G q
+  print log exit Q
+  enter G d
+  print log enter D
+  history G dh y
+  enter G d1
+  print log enter D1
+  enter G y
+  print log enter Y
+  outcome G fired q-dh
+= deep fired q-dh
+> states
+= d d1 y
+> send out2
+  post out2 0
+  event out2
+  fire G d-q
+  exit G y
+  print log exit Y
+  exit G d1
+  print log exit D1
+  exit G d
+  print log exit D
+  enter G q
+  print log enter Q
+  outcome G fired d-q
+= out2 fired d-q
+> send h2
+  post h2 0
+  event h2
+  fire G q-h2
+  exit G q
+  print log exit Q
+  enter G p2
+  print log enter P2
+  fire G p2init-c1
+  enter G c1
+  print log enter C1
+  outcome G fired q-h2
+= h2 fired q-h2
+> send go2
+  post go2 0
+  event go2
+  fire G c1-c2
+  exit G c1
+  print log exit C1
+  enter G c2
+  print log enter C2
+  outcome G fired c1-c2
+= go2 fired c1-c2
+> send out3
+  post out3 0
+  event out3
+  fire G p2-q
+  exit G c2
+  print log exit C2
+  exit G p2
+  print log exit P2
+  enter G q
+  print log enter Q
+  outcome G fired p2-q
+= out3 fired p2-q
+> send h2
+  post h2 0
+  event h2
+  fire G q-h2
+  exit G q
+  print log exit Q
+  enter G p2
+  print log enter P2
+  history G h2 c2
+  enter G c2
+  print log enter C2
+  outcome G fired q-h2
+= h2 fired q-h2
+> states
+= p2 c2

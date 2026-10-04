@@ -27,7 +27,7 @@
   <key id="dFormalName" for="node" attr.name="formalName" attr.type="string"/>
   <graph id="M1" edgedefault="directed">
     <data key="dStateMachine"/>
-    <data key="dName">First</data>
+    <data key="dName">Host</data>
     <node id="nMeta">
       <data key="dNote">formal</data>
       <data key="dName">CGML_META</data>
@@ -38,76 +38,32 @@
       <data key="dName">CGML_COMPONENT log</data>
       <data key="dData">type/ Log</data>
     </node>
-    <node id="c_timer1">
-      <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT timer1</data>
-      <data key="dData">type/ Timer</data>
-    </node>
-    <node id="c_bus">
-      <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT bus</data>
-      <data key="dData">type/ Bus</data>
-    </node>
     <node id="init">
       <data key="dVertex">initial</data>
     </node>
-    <node id="a">
-      <data key="dName">A</data>
+    <node id="sub">
+      <data key="dSubmachineState">lib/worker.graphml#W</data>
+      <data key="dName">External job</data>
+      <graph id="sub:" edgedefault="directed">
+        <node id="sub::en">
+          <data key="dVertex">entryPoint</data>
+          <data key="dName">Start</data>
+        </node>
+        <node id="sub::ex">
+          <data key="dVertex">exitPoint</data>
+          <data key="dName">Done</data>
+        </node>
+      </graph>
+    </node>
+    <node id="after">
+      <data key="dName">After</data>
       <data key="dData">entry/
-timer1.start(100)</data>
-    </node>
-    <node id="b">
-      <data key="dName">B</data>
-      <data key="dData">timer1.timeout/
-log.print('timeout in M1')
+log.print('enter After')
 
-bus.ping/
-log.print('M1 sees', event.text)</data>
+exit/
+log.print('exit After')</data>
     </node>
-    <edge id="init-a" source="init" target="a"/>
-    <edge id="a-b" source="a" target="b">
-      <data key="dData">go/
-log.print('go in M1')
-bus.ping('from M1')</data>
-    </edge>
-  </graph>
-  <graph id="M2" edgedefault="directed">
-    <data key="dStateMachine"/>
-    <data key="dName">Second</data>
-    <node id="c_log">
-      <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT log</data>
-      <data key="dData">type/ Log</data>
-    </node>
-    <node id="c_timer1">
-      <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT timer1</data>
-      <data key="dData">type/ Timer</data>
-    </node>
-    <node id="c_bus">
-      <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT bus</data>
-      <data key="dData">type/ Bus</data>
-    </node>
-    <node id="init2">
-      <data key="dVertex">initial</data>
-    </node>
-    <node id="x">
-      <data key="dName">X</data>
-    </node>
-    <node id="y">
-      <data key="dName">Y</data>
-      <data key="dData">timer1.timeout/
-log.print('timeout in M2')
-
-bus.ping/
-log.print('M2 sees', event.text)</data>
-    </node>
-    <edge id="init2-x" source="init2" target="x"/>
-    <edge id="x-y" source="x" target="y">
-      <data key="dData">go/
-log.print('go in M2')
-timer1.start(150)</data>
-    </edge>
+    <edge id="init-sub::en" source="init" target="sub::en"/>
+    <edge id="sub::ex-after" source="sub::ex" target="after"/>
   </graph>
 </graphml>

@@ -1,0 +1,18 @@
+# entry and exit points
+load 18-points.graphml
+start
+# through the entry point: C is entered, then C2, not the initial C1
+send go
+states
+# through the exit point: C2 and C are left, then the transition to D
+send done
+states
+send tow
+states
+# an exit point without a transition: E is left, the machine stays in W
+send leave
+states
+# the exit point of the machine
+send end
+finished
+states

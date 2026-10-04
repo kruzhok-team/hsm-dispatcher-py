@@ -1,0 +1,11 @@
+# shared and local components
+load 15-visibility.graphml
+start
+clock 100
+# one shared timer: one event, both machines
+tick
+snapshot
+error load 15-visibility-priority.graphml
+error load 15-visibility-type.graphml
+error load 15-visibility-mixed.graphml
+error load 15-visibility-value.graphml

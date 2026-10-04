@@ -24,6 +24,7 @@
 import ast
 import difflib
 import io
+import json
 import os
 import shlex
 import subprocess
@@ -41,6 +42,9 @@ GOOD_DIR = os.path.join(TEST_DIR, 'good')
 VALIDATOR_DIR = os.path.join(TEST_DIR, '..', '..', 'cyberiadaml-compat-tests')
 
 MS_IN_SECOND = 1000
+# the validator still requires a component identifier unique in the whole
+# document; the dispatcher reads PNST 1044, 10.3.2 per machine
+IGNORED_RULES = ('CGML-10.3-1',)
 ERROR_COMMAND = 'error'
 COMMENT = '#'
 
@@ -62,7 +66,17 @@ class Counter(hsmd.Component):
         self.value = data
 
 
+class Bus(hsmd.Component):
+    """The test component shared by the machines: a signal with a text."""
+
+    shared = True
+
+    def ping(self, text=''):
+        self.signal('ping', text=text)
+
+
 hsmd.register('Counter', Counter)
+hsmd.register('Bus', Bus)
 
 
 def parse_value(text):
@@ -162,15 +176,28 @@ def validate_graphs():
     if not os.path.isdir(os.path.join(VALIDATOR_DIR, 'cgmlval')):
         print('the validator is not found, the diagrams are not checked')
         return True
-    graphs = sorted(os.path.join(GRAPHS_DIR, name) for name in os.listdir(GRAPHS_DIR))
-    result = subprocess.run([sys.executable, '-m', 'cgmlval', 'validate', '--strict'] + graphs,
-                            cwd=VALIDATOR_DIR, stdout=subprocess.PIPE,
+    graphs = sorted(os.path.join(GRAPHS_DIR, name) for name in os.listdir(GRAPHS_DIR)
+                    if name.endswith('.graphml'))
+    graphs += sorted(os.path.join(GRAPHS_DIR, 'lib', name)
+                     for name in os.listdir(os.path.join(GRAPHS_DIR, 'lib')))
+    result = subprocess.run([sys.executable, '-m', 'cgmlval', 'validate', '--strict', '--json']
+                            + graphs, cwd=VALIDATOR_DIR, stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT, universal_newlines=True, check=False)
-    if result.returncode != 0:
+    try:
+        reports = json.loads(result.stdout)
+    except ValueError:
         print(result.stdout)
         return False
-    print('{} diagrams are valid'.format(len(graphs)))
-    return True
+    bad = 0
+    for report in reports:
+        findings = [f for f in report['findings']
+                    if f['severity'] == 'ERROR' and f['req'] not in IGNORED_RULES]
+        for finding in findings:
+            print('{}:{}: {} {}'.format(os.path.basename(report['file']), finding['line'],
+                                        finding['req'], finding['message']))
+        bad += bool(findings)
+    print('{} diagrams checked, {} invalid'.format(len(graphs), bad))
+    return bad == 0
 
 
 def main():

@@ -1,0 +1,80 @@
+> load 18-points.graphml
+> start
+  fire G init-s
+  enter G s
+  print log enter S
+> send go
+  post go 0
+  event go
+  fire G s-cin
+  exit G s
+  print log exit S
+  enter G c
+  print log enter C
+  fire G cin-c2
+  enter G c2
+  print log enter C2
+  outcome G fired s-cin cin-c2
+= go fired s-cin cin-c2
+> states
+= c c2
+> send done
+  post done 0
+  event done
+  fire G c2-cout
+  print log done
+  exit G c2
+  print log exit C2
+  exit G c
+  print log exit C
+  fire G cout-d
+  enter G d
+  print log enter D
+  outcome G fired c2-cout cout-d
+= done fired c2-cout cout-d
+> states
+= d
+> send tow
+  post tow 0
+  event tow
+  fire G d-w
+  exit G d
+  print log exit D
+  enter G w
+  print log enter W
+  fire G winit-ea
+  enter G ea
+  print log enter E
+  fire G einit-e1
+  enter G e1
+  print log enter E1
+  outcome G fired d-w
+= tow fired d-w
+> states
+= w ea e1
+> send leave
+  post leave 0
+  event leave
+  fire G e1-quit
+  print log leave
+  exit G e1
+  print log exit E1
+  exit G ea
+  print log exit E
+  outcome G fired e1-quit
+= leave fired e1-quit
+> states
+= w
+> send end
+  post end 0
+  event end
+  fire G w-bye
+  exit G w
+  print log exit W
+  finished G
+  outcome G fired w-bye
+= end fired w-bye
+> finished
+= True
+> states
+=

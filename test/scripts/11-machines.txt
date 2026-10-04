@@ -1,11 +1,15 @@
-# two machines of one document
+# two machines of one document: a shared bus, a private timer each
 load 11-machines.graphml
 start
 states M1
 states M2
+# both machines react; the signal of the shared bus reaches both
 send go
 clock 100
-# the signal of a component of M1 is seen by M2
+# the timer of M1 only
+tick
+clock 50
+# the timer of M2 only
 tick
 states First
 states Second

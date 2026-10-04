@@ -1,0 +1,7 @@
+# the terminate pseudostate: no exit actions
+load 20-terminate.graphml
+start
+send kill
+finished
+states
+send kill

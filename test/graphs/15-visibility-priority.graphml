@@ -33,61 +33,30 @@
       <data key="dName">CGML_META</data>
       <data key="dData">standardVersion/ 1.0</data>
     </node>
-    <node id="c_log">
+    <node id="c_b">
       <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT log</data>
-      <data key="dData">type/ Log</data>
-    </node>
-    <node id="c_timer1">
-      <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT timer1</data>
-      <data key="dData">type/ Timer</data>
-    </node>
-    <node id="c_bus">
-      <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT bus</data>
-      <data key="dData">type/ Bus</data>
+      <data key="dName">CGML_COMPONENT b</data>
+      <data key="dData">type/ Bus
+
+priority/ 1</data>
     </node>
     <node id="init">
       <data key="dVertex">initial</data>
     </node>
     <node id="a">
       <data key="dName">A</data>
-      <data key="dData">entry/
-timer1.start(100)</data>
-    </node>
-    <node id="b">
-      <data key="dName">B</data>
-      <data key="dData">timer1.timeout/
-log.print('timeout in M1')
-
-bus.ping/
-log.print('M1 sees', event.text)</data>
     </node>
     <edge id="init-a" source="init" target="a"/>
-    <edge id="a-b" source="a" target="b">
-      <data key="dData">go/
-log.print('go in M1')
-bus.ping('from M1')</data>
-    </edge>
   </graph>
   <graph id="M2" edgedefault="directed">
     <data key="dStateMachine"/>
     <data key="dName">Second</data>
-    <node id="c_log">
+    <node id="c_b">
       <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT log</data>
-      <data key="dData">type/ Log</data>
-    </node>
-    <node id="c_timer1">
-      <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT timer1</data>
-      <data key="dData">type/ Timer</data>
-    </node>
-    <node id="c_bus">
-      <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT bus</data>
-      <data key="dData">type/ Bus</data>
+      <data key="dName">CGML_COMPONENT b</data>
+      <data key="dData">type/ Bus
+
+priority/ 2</data>
     </node>
     <node id="init2">
       <data key="dVertex">initial</data>
@@ -95,19 +64,6 @@ bus.ping('from M1')</data>
     <node id="x">
       <data key="dName">X</data>
     </node>
-    <node id="y">
-      <data key="dName">Y</data>
-      <data key="dData">timer1.timeout/
-log.print('timeout in M2')
-
-bus.ping/
-log.print('M2 sees', event.text)</data>
-    </node>
     <edge id="init2-x" source="init2" target="x"/>
-    <edge id="x-y" source="x" target="y">
-      <data key="dData">go/
-log.print('go in M2')
-timer1.start(150)</data>
-    </edge>
   </graph>
 </graphml>

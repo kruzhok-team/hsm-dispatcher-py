@@ -1,0 +1,75 @@
+> load 17-defer.graphml
+> start
+  fire G init-a
+  enter G a
+  fire G ainit-a1
+  enter G a1
+> send e
+  post e 0
+  event e
+  defer G a1#1
+  outcome G deferred
+= e deferred
+> send f
+  post f 0
+  event f
+  defer G a1#2
+  outcome G deferred
+= f deferred
+> states
+= a a1
+> send go
+  post go 0
+  event go
+  fire G a1-a2
+  exit G a1
+  enter G a2
+  outcome G fired a1-a2
+  event e
+  fire G a2#1
+  print log e handled in A2
+  outcome G fired a2#1
+  event f
+  fire G a#2
+  print log f handled in A
+  outcome G fired a#2
+= go fired a1-a2
+> send e
+  post e 0
+  event e
+  fire G a2#1
+  print log e handled in A2
+  outcome G fired a2#1
+= e fired a2#1
+> send next
+  post next 0
+  event next
+  fire G a2-a3
+  exit G a2
+  enter G a3
+  outcome G fired a2-a3
+= next fired a2-a3
+> send e
+  post e 0
+  event e
+  defer G a3#1
+  outcome G deferred
+= e deferred
+> snapshot
+= {'version': 2, 'machines': {'G': {'active': 'a3', 'finished': False, 'history': {'a': ['a2', 'a2']}}}, 'queue': [], 'completions': [], 'deferred': {'G': [{'name': 'e', 'priority': 0, 'parameters': {}, 'machine': None}]}, 'components': {'shared': {}, 'local': {'G': {'log': None}}}}
+> load 17-defer.graphml
+> restore
+> send next2
+  post next2 0
+  event next2
+  fire G a3-a4
+  exit G a3
+  enter G a4
+  outcome G fired a3-a4
+  event e
+  fire G a#1
+  print log e handled in A
+  outcome G fired a#1
+= next2 fired a3-a4
+> states
+= a a4

@@ -38,7 +38,7 @@
   fire G init-a
   enter G a
 > snapshot
-= {'version': 1, 'machines': {'G': {'active': 'a', 'finished': False}}, 'queue': [], 'completions': [], 'components': {'G': {'log': None}}}
+= {'version': 2, 'machines': {'G': {'active': 'a', 'finished': False, 'history': {}}}, 'queue': [], 'completions': [], 'deferred': {'G': []}, 'components': {'shared': {}, 'local': {'G': {'log': None}}}}
 > error send go
   post go 0
   event go
@@ -65,6 +65,6 @@
 > error load 14-errors-syntax.graphml
 ! DocumentError: machine 'G', state 'a', entry, line 2: invalid syntax
 > error load 14-errors-history.graphml
-! DocumentError: machine 'G', element 'h': shallow history pseudostate is not supported
+! no error
 > error load nosuch.graphml
 ! DocumentError: File Exception: Cannot open file nosuch.graphml

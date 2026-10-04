@@ -25,9 +25,9 @@
   <key id="dColor" for="edge" attr.name="color" attr.type="string"/>
   <key id="dFormalName" for="graph" attr.name="formalName" attr.type="string"/>
   <key id="dFormalName" for="node" attr.name="formalName" attr.type="string"/>
-  <graph id="M1" edgedefault="directed">
+  <graph id="W" edgedefault="directed">
     <data key="dStateMachine"/>
-    <data key="dName">First</data>
+    <data key="dName">Worker</data>
     <node id="nMeta">
       <data key="dNote">formal</data>
       <data key="dName">CGML_META</data>
@@ -38,76 +38,62 @@
       <data key="dName">CGML_COMPONENT log</data>
       <data key="dData">type/ Log</data>
     </node>
-    <node id="c_timer1">
-      <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT timer1</data>
-      <data key="dData">type/ Timer</data>
-    </node>
-    <node id="c_bus">
-      <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT bus</data>
-      <data key="dData">type/ Bus</data>
-    </node>
-    <node id="init">
+    <node id="winit">
       <data key="dVertex">initial</data>
     </node>
-    <node id="a">
-      <data key="dName">A</data>
+    <node id="wen">
+      <data key="dVertex">entryPoint</data>
+      <data key="dName">Start</data>
+    </node>
+    <node id="wex">
+      <data key="dVertex">exitPoint</data>
+      <data key="dName">Done</data>
+    </node>
+    <node id="ws">
+      <data key="dName">Step</data>
       <data key="dData">entry/
-timer1.start(100)</data>
-    </node>
-    <node id="b">
-      <data key="dName">B</data>
-      <data key="dData">timer1.timeout/
-log.print('timeout in M1')
+log.print('enter Step')
 
-bus.ping/
-log.print('M1 sees', event.text)</data>
+exit/
+log.print('exit Step')</data>
     </node>
-    <edge id="init-a" source="init" target="a"/>
-    <edge id="a-b" source="a" target="b">
-      <data key="dData">go/
-log.print('go in M1')
-bus.ping('from M1')</data>
+    <node id="inner">
+      <data key="dSubmachineState">V</data>
+      <data key="dName">Inner</data>
+    </node>
+    <edge id="winit-ws" source="winit" target="ws"/>
+    <edge id="wen-ws" source="wen" target="ws"/>
+    <edge id="ws-inner" source="ws" target="inner">
+      <data key="dData">go/</data>
     </edge>
+    <edge id="inner-wex" source="inner" target="wex"/>
   </graph>
-  <graph id="M2" edgedefault="directed">
+  <graph id="V" edgedefault="directed">
     <data key="dStateMachine"/>
-    <data key="dName">Second</data>
+    <data key="dName">Leaf</data>
     <node id="c_log">
       <data key="dNote">formal</data>
       <data key="dName">CGML_COMPONENT log</data>
       <data key="dData">type/ Log</data>
     </node>
-    <node id="c_timer1">
-      <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT timer1</data>
-      <data key="dData">type/ Timer</data>
-    </node>
-    <node id="c_bus">
-      <data key="dNote">formal</data>
-      <data key="dName">CGML_COMPONENT bus</data>
-      <data key="dData">type/ Bus</data>
-    </node>
-    <node id="init2">
+    <node id="vinit">
       <data key="dVertex">initial</data>
     </node>
-    <node id="x">
-      <data key="dName">X</data>
-    </node>
-    <node id="y">
-      <data key="dName">Y</data>
-      <data key="dData">timer1.timeout/
-log.print('timeout in M2')
+    <node id="v1">
+      <data key="dName">V1</data>
+      <data key="dData">entry/
+log.print('enter V1')
 
-bus.ping/
-log.print('M2 sees', event.text)</data>
+exit/
+log.print('exit V1')</data>
     </node>
-    <edge id="init2-x" source="init2" target="x"/>
-    <edge id="x-y" source="x" target="y">
-      <data key="dData">go/
-log.print('go in M2')
-timer1.start(150)</data>
+    <node id="vfin">
+      <data key="dVertex">final</data>
+    </node>
+    <edge id="vinit-v1" source="vinit" target="v1"/>
+    <edge id="v1-vfin" source="v1" target="vfin">
+      <data key="dData">fin/
+log.print('fin')</data>
     </edge>
   </graph>
 </graphml>

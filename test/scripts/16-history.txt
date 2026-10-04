@@ -1,0 +1,25 @@
+# shallow and deep history
+load 16-history.graphml
+start
+send next
+send out
+# shallow: back to the last substate
+send back
+send fin
+send out
+# the last substate was final: the default transition of the history
+send back
+send out
+# never active: no default transition, the initial pseudostate
+send deep
+send step
+send out2
+# deep: the whole configuration
+send deep
+states
+send out2
+send h2
+send go2
+send out3
+send h2
+states

@@ -1,0 +1,89 @@
+> load 19-submachine.graphml
+> start
+  fire M1 init-sub::en
+  enter M1 sub
+  fire M1 sub/m2en-m2s
+  enter M1 sub/m2s
+  print log run 0 0
+  fire M2 m2init-m2s
+  enter M2 m2s
+  print log run 0 0
+> states
+= sub sub/m2s
+> states M2
+= m2s
+> triggers
+= finish abort
+> send finish
+  post finish 0
+  event finish
+  fire M1 sub/m2s-m2ex
+  exit M1 sub/m2s
+  print log leave run
+  exit M1 sub
+  fire M1 sub::ex-after
+  enter M1 after
+  print log enter After
+  outcome M1 fired sub/m2s-m2ex sub::ex-after
+  fire M2 m2s-m2ex
+  exit M2 m2s
+  print log leave run
+  finished M2
+  outcome M2 fired m2s-m2ex
+= finish fired sub/m2s-m2ex sub::ex-after m2s-m2ex
+> states
+= after
+> states M2
+=
+> finished M2
+= True
+> load 19-submachine-ext.graphml
+> start
+  fire M1 init-sub::en
+  enter M1 sub
+  fire M1 sub/wen-ws
+  enter M1 sub/ws
+  print log enter Step
+> states
+= sub sub/ws
+> send go
+  post go 0
+  event go
+  fire M1 sub/ws-inner
+  exit M1 sub/ws
+  print log exit Step
+  enter M1 sub/inner
+  fire M1 sub/inner/vinit-v1
+  enter M1 sub/inner/v1
+  print log enter V1
+  outcome M1 fired sub/ws-inner
+= go fired sub/ws-inner
+> states
+= sub sub/inner sub/inner/v1
+> send fin
+  post fin 0
+  event fin
+  fire M1 sub/inner/v1-vfin
+  print log fin
+  exit M1 sub/inner/v1
+  print log exit V1
+  completion M1 sub/inner
+  outcome M1 fired sub/inner/v1-vfin
+  fire M1 sub/inner-wex
+  exit M1 sub/inner
+  exit M1 sub
+  fire M1 sub::ex-after
+  enter M1 after
+  print log enter After
+  outcome M1 fired sub/inner-wex sub::ex-after
+= fin fired sub/inner/v1-vfin
+> states
+= after
+> error load 19-submachine-cycle.graphml
+! DocumentError: machine 'M2', submachine state 'sub2': the reference 'M1' is circular
+> error load 19-submachine-point.graphml
+! DocumentError: machine 'M1', submachine state 'sub': no point 'Begin' in the submachine
+> error load 19-submachine-type.graphml
+! DocumentError: machine 'M1', submachine state 'sub': the component 'n' is a Bus here and a Counter in the submachine
+> error load 19-submachine-noinit.graphml
+! DocumentError: machine 'M2': no initial pseudostate

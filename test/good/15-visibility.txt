@@ -1,0 +1,33 @@
+> load 15-visibility.graphml
+> start
+  fire M1 init-a
+  enter M1 a
+  post bus.ping 0 M1
+  fire M2 init2-x
+  enter M2 x
+  event bus.ping
+  fire M1 a#2
+  print log M1 bus local
+  outcome M1 fired a#2
+= bus.ping fired a#2
+> clock 100
+> tick
+  post t.timeout 7
+  event t.timeout
+  fire M1 a#1
+  print log M1 timeout
+  outcome M1 fired a#1
+  fire M2 x#1
+  print log M2 timeout
+  outcome M2 fired x#1
+= t.timeout fired a#1 x#1
+> snapshot
+= {'version': 2, 'machines': {'M1': {'active': 'a', 'finished': False, 'history': {}}, 'M2': {'active': 'x', 'finished': False, 'history': {}}}, 'queue': [], 'completions': [], 'deferred': {'M1': [], 'M2': []}, 'components': {'shared': {'t': {'interval': 100, 'enabled': True, 'remaining': 100}}, 'local': {'M1': {'log': None, 'bus': None}, 'M2': {'log': None}}}}
+> error load 15-visibility-priority.graphml
+! DocumentError: machine 'M2', component 'b': the shared component is declared differently in the machine 'M1'
+> error load 15-visibility-type.graphml
+! DocumentError: machine 'M2', component 'x': the shared component is declared differently in the machine 'M1'
+> error load 15-visibility-mixed.graphml
+! DocumentError: machine 'M1', component 't': local here and shared in the machine 'M2'
+> error load 15-visibility-value.graphml
+! DocumentError: machine 'M1', component 't': bad shared value 'maybe'
