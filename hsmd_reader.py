@@ -20,6 +20,8 @@
 #
 #  -----------------------------------------------------------------------------
 
+import os
+
 import CyberiadaML
 
 
@@ -38,8 +40,17 @@ COMPOSITE = 'composite'
 INITIAL = 'initial'
 FINAL = 'final'
 CHOICE = 'choice'
+SHALLOW = 'shallow'
+DEEP = 'deep'
+ENTRY = 'entry'
+EXIT = 'exit'
+TERMINATE = 'terminate'
 
 STATE_KINDS = (STATE, COMPOSITE)
+HISTORY_KINDS = (SHALLOW, DEEP)
+POINT_KINDS = (ENTRY, EXIT)
+# the pseudostates whose transitions carry no event
+SILENT_KINDS = (INITIAL, CHOICE, SHALLOW, DEEP, ENTRY, EXIT)
 
 # reserved names of the action text
 EVENT_ANY = 'ANY'
@@ -53,27 +64,30 @@ COMPONENT_PREFIX = 'CGML_COMPONENT '
 PARAMETER_SEPARATOR = '/'
 PARAMETER_TYPE = 'type'
 PARAMETER_PRIORITY = 'priority'
+PARAMETER_SHARED = 'shared'
+SHARED_VALUES = {'yes': True, 'true': True, 'no': False, 'false': False}
+
+# the identifiers of an inlined machine: <submachine state>/<identifier>
+INLINE_SEPARATOR = '/'
+# an external reference: <path>#<machine id>
+REFERENCE_FRAGMENT = '#'
 
 _KINDS = {
     CyberiadaML.elementSimpleState: STATE,
     CyberiadaML.elementCompositeState: COMPOSITE,
+    CyberiadaML.elementSubmachineState: COMPOSITE,
     CyberiadaML.elementInitial: INITIAL,
     CyberiadaML.elementFinal: FINAL,
     CyberiadaML.elementChoice: CHOICE,
+    CyberiadaML.elementShallowHistory: SHALLOW,
+    CyberiadaML.elementDeepHistory: DEEP,
+    CyberiadaML.elementEntryPoint: ENTRY,
+    CyberiadaML.elementExitPoint: EXIT,
+    CyberiadaML.elementTerminate: TERMINATE,
 }
 
 _IGNORED = (CyberiadaML.elementComment, CyberiadaML.elementFormalComment,
             CyberiadaML.elementTransition)
-
-# the elements of the later stages
-_UNSUPPORTED = {
-    CyberiadaML.elementTerminate: 'terminate pseudostate',
-    CyberiadaML.elementShallowHistory: 'shallow history pseudostate',
-    CyberiadaML.elementDeepHistory: 'deep history pseudostate',
-    CyberiadaML.elementSubmachineState: 'submachine state',
-    CyberiadaML.elementEntryPoint: 'entry point',
-    CyberiadaML.elementExitPoint: 'exit point',
-}
 
 
 class Block:
@@ -97,6 +111,7 @@ class Reaction:
         self.guard = ''
         self.behavior = ''
         self.propagation = None      # None: the default of the document
+        self.defer = False
         self.owner = None
         self.guard_code = None
         self.code = None
@@ -117,6 +132,8 @@ class Vertex:
         self.exit = []
         self.reactions = []          # the internal ones first, the document order
         self.initial = None
+        self.history = {}            # kind -> the history vertex of this container
+        self.submachine = None       # the reference of a submachine state
 
     def is_state(self):
         return self.kind in STATE_KINDS
@@ -130,14 +147,23 @@ class Vertex:
             vertex = vertex.parent
         return result
 
+    def points(self):
+        return [v for v in self.children if v.kind in POINT_KINDS]
+
 
 class ComponentDeclaration:
 
-    def __init__(self, ident, ctype, priority, parameters):
+    def __init__(self, ident, ctype, priority, shared, parameters, machine):
         self.id = ident
         self.type = ctype
         self.priority = priority     # None: the default of the type
+        self.shared = shared         # None: the default of the type
         self.parameters = parameters
+        self.machine = machine       # the declaring machine
+
+    def same(self, other):
+        return (self.type == other.type and self.priority == other.priority
+                and self.parameters == other.parameters)
 
 
 class Machine:
@@ -154,6 +180,12 @@ class Machine:
 
     def where(self):
         return "machine '{}'".format(self.id)
+
+    def component(self, ident):
+        for declaration in self.components:
+            if declaration.id == ident:
+                return declaration
+        return None
 
 
 def parse_parameters(body):
@@ -177,12 +209,13 @@ def parse_parameters(body):
 
 def _read_component(comment, machine):
     ident = comment.get_name()[len(COMPONENT_PREFIX):].strip()
+    where = "{}, component '{}'".format(machine.where(), ident)
     try:
         parameters = parse_parameters(comment.get_body())
     except DocumentError as e:
-        raise DocumentError("{}, component '{}': {}".format(machine.where(), ident, e)) from e
+        raise DocumentError("{}: {}".format(where, e)) from e
     if PARAMETER_TYPE not in parameters:
-        raise DocumentError("{}, component '{}': no type".format(machine.where(), ident))
+        raise DocumentError("{}: no type".format(where))
     ctype = parameters.pop(PARAMETER_TYPE)
     priority = None
     if PARAMETER_PRIORITY in parameters:
@@ -190,16 +223,24 @@ def _read_component(comment, machine):
         try:
             priority = int(value)
         except ValueError:
-            raise DocumentError("{}, component '{}': bad priority '{}'".format(
-                machine.where(), ident, value)) from None
-    machine.components.append(ComponentDeclaration(ident, ctype, priority, parameters))
+            raise DocumentError("{}: bad priority '{}'".format(where, value)) from None
+    shared = None
+    if PARAMETER_SHARED in parameters:
+        value = parameters.pop(PARAMETER_SHARED)
+        if value.lower() not in SHARED_VALUES:
+            raise DocumentError("{}: bad shared value '{}'".format(where, value))
+        shared = SHARED_VALUES[value.lower()]
+    if machine.component(ident) is not None:
+        raise DocumentError("{}: declared twice".format(where))
+    machine.components.append(ComponentDeclaration(ident, ctype, priority, shared,
+                                                   parameters, machine.id))
 
 
 def _set_action(reaction, action, machine):
     propagation = action.get_propagation()
     if propagation == CyberiadaML.eventPropagationDefer:
-        raise DocumentError("{}: deferred events are not supported".format(reaction.where))
-    if propagation == CyberiadaML.eventPropagationPropagate:
+        reaction.defer = True
+    elif propagation == CyberiadaML.eventPropagationPropagate:
         reaction.propagation = True
     elif propagation == CyberiadaML.eventPropagationBlock:
         reaction.propagation = False
@@ -215,6 +256,8 @@ def _read_state_actions(element, vertex, machine):
     internal = 0
     for action in element.get_actions():
         atype = action.get_type()
+        if vertex.submachine is not None:
+            raise DocumentError("{}: a submachine state has no behaviour".format(where))
         if atype == CyberiadaML.actionEntry:
             vertex.entry.append(Block(action.get_behavior(), where + ', entry'))
         elif atype == CyberiadaML.actionExit:
@@ -230,11 +273,28 @@ def _read_state_actions(element, vertex, machine):
             vertex.reactions.append(reaction)
 
 
+def _add_vertex(vertex, parent, machine):
+    machine.vertices[vertex.id] = vertex
+    parent.children.append(vertex)
+    where = "{}, '{}'".format(machine.where(), parent.id)
+    if vertex.kind == INITIAL:
+        if parent.initial is not None:
+            raise DocumentError("{}: two initial pseudostates".format(where))
+        parent.initial = vertex
+    elif vertex.kind in HISTORY_KINDS:
+        if vertex.kind in parent.history:
+            raise DocumentError("{}: two {} history pseudostates".format(where, vertex.kind))
+        parent.history[vertex.kind] = vertex
+    elif vertex.kind in POINT_KINDS:
+        if not vertex.name:
+            raise DocumentError("{}, point '{}': no name".format(machine.where(), vertex.id))
+        for other in parent.points():
+            if other is not vertex and other.name == vertex.name:
+                raise DocumentError("{}: two points named '{}'".format(where, vertex.name))
+
+
 def _read_vertex(element, parent, machine):
     etype = element.get_type()
-    if etype in _UNSUPPORTED:
-        raise DocumentError("{}, element '{}': {} is not supported".format(
-            machine.where(), element.get_id(), _UNSUPPORTED[etype]))
     if etype in _IGNORED:
         if (etype == CyberiadaML.elementFormalComment and
                 element.get_name().startswith(COMPONENT_PREFIX)):
@@ -244,13 +304,9 @@ def _read_vertex(element, parent, machine):
         raise DocumentError("{}, element '{}': unknown element type".format(
             machine.where(), element.get_id()))
     vertex = Vertex(element.get_id(), element.get_name(), _KINDS[etype], parent)
-    machine.vertices[vertex.id] = vertex
-    parent.children.append(vertex)
-    if vertex.kind == INITIAL:
-        if parent.initial is not None:
-            raise DocumentError("{}, '{}': two initial pseudostates".format(
-                machine.where(), parent.id))
-        parent.initial = vertex
+    if etype == CyberiadaML.elementSubmachineState:
+        vertex.submachine = element.get_submachine_reference()
+    _add_vertex(vertex, parent, machine)
     if vertex.is_state():
         _read_state_actions(element, vertex, machine)
         for child in element.get_children():
@@ -283,29 +339,46 @@ def _read_transitions(sm, machine):
         reaction = Reaction(trans.get_id(), source, target, where)
         if trans.has_action():
             _set_action(reaction, trans.get_action(), machine)
-        reaction.owner = _owner(source, target)
         source.reactions.append(reaction)
+
+
+def _is_inside(vertex, container):
+    return container.kind == ROOT or container in vertex.chain()[1:]
+
+
+def _check_vertex(vertex, machine):
+    where = "{}, {} '{}'".format(machine.where(), vertex.kind, vertex.id)
+    count = len(vertex.reactions)
+    if vertex.kind in SILENT_KINDS:
+        for reaction in vertex.reactions:
+            if reaction.trigger:
+                raise DocumentError("{}: an event on a pseudostate transition".format(
+                    reaction.where))
+    if vertex.kind in (FINAL, TERMINATE) and count:
+        raise DocumentError("{}: an outgoing transition".format(where))
+    if vertex.kind in (INITIAL, ENTRY) and count != 1:
+        raise DocumentError("{}: one transition is required".format(where))
+    if vertex.kind in HISTORY_KINDS + (EXIT,) and count > 1:
+        raise DocumentError("{}: at most one transition".format(where))
+    if vertex.kind == CHOICE and not count:
+        raise DocumentError("{}: no transitions".format(where))
+    if vertex.kind == ENTRY and not _is_inside(vertex.reactions[0].target, vertex.parent):
+        raise DocumentError("{}: the transition leads outside".format(where))
+    if vertex.kind == EXIT and count:
+        if vertex.parent.kind == ROOT:
+            raise DocumentError("{}: a transition from the machine's exit point".format(where))
+        if _is_inside(vertex.reactions[0].target, vertex.parent):
+            raise DocumentError("{}: the transition stays inside".format(where))
 
 
 def _check(machine):
     if machine.root.initial is None:
         raise DocumentError("{}: no initial pseudostate".format(machine.where()))
     for vertex in machine.vertices.values():
-        if vertex.kind == FINAL and vertex.reactions:
-            raise DocumentError("{}, final state '{}': an outgoing transition".format(
-                machine.where(), vertex.id))
-        if vertex.kind == INITIAL:
-            if len(vertex.reactions) != 1:
-                raise DocumentError("{}, initial pseudostate '{}': one transition "
-                                    "is required".format(machine.where(), vertex.id))
-        if vertex.kind in (INITIAL, CHOICE):
-            for reaction in vertex.reactions:
-                if reaction.trigger:
-                    raise DocumentError("{}: an event on a pseudostate transition".format(
-                        reaction.where))
-        if vertex.kind == CHOICE and not vertex.reactions:
-            raise DocumentError("{}, choice '{}': no transitions".format(
-                machine.where(), vertex.id))
+        _check_vertex(vertex, machine)
+        for reaction in vertex.reactions:
+            if reaction.target is not None:
+                reaction.owner = _owner(reaction.source, reaction.target)
 
 
 def _read_machine(sm, meta):
@@ -316,12 +389,10 @@ def _read_machine(sm, meta):
     for child in sm.get_children():
         _read_vertex(child, machine.root, machine)
     _read_transitions(sm, machine)
-    _check(machine)
     return machine
 
 
-def load(path):
-    """Read the document, return the list of its state machines."""
+def _read_document(path):
     doc = CyberiadaML.LocalDocument()
     try:
         doc.open(path, CyberiadaML.formatDetect, CyberiadaML.geometryFormatNone)
@@ -329,5 +400,133 @@ def load(path):
         raise DocumentError(str(e)) from e
     machines = [_read_machine(sm, doc.get_meta()) for sm in doc.get_state_machines()]
     if not machines:
-        raise DocumentError('the document contains no state machines')
+        raise DocumentError("'{}': the document contains no state machines".format(path))
+    return machines
+
+
+# ----------------------------------------------------------------------------
+# submachine states: the referenced machine is copied into the state
+
+
+class _Documents:
+    """The documents read so far, by path."""
+
+    def __init__(self):
+        self.machines = {}
+
+    def get(self, path):
+        if path not in self.machines:
+            self.machines[path] = _read_document(path)
+        return self.machines[path]
+
+
+def _resolve(reference, path, documents):
+    """The referenced machine and the path of its document: a machine of the
+    same document, or <path>[#<machine id>] relative to the document."""
+    file, fragment, ident = reference.partition(REFERENCE_FRAGMENT)
+    if not fragment:
+        for machine in documents.get(path):
+            if machine.id == reference:
+                return machine, path
+        file, ident = reference, None
+    if file:
+        path = os.path.normpath(os.path.join(os.path.dirname(path), file))
+    machines = documents.get(path)
+    if not ident:
+        return machines[0], path
+    for machine in machines:
+        if machine.id == ident:
+            return machine, path
+    raise DocumentError("'{}': no machine '{}'".format(path, ident))
+
+
+def _copy_vertex(source, parent, prefix, machine, mapping):
+    """Copy a vertex tree of the referenced machine under the parent."""
+    ident = prefix + source.id
+    vertex = Vertex(ident, source.name, source.kind, parent)
+    vertex.submachine = source.submachine
+    where = "{}, state '{}'".format(machine.where(), ident)
+    vertex.entry = [Block(b.text, where + ', entry') for b in source.entry]
+    vertex.exit = [Block(b.text, where + ', exit') for b in source.exit]
+    mapping[source] = vertex
+    _add_vertex(vertex, parent, machine)
+    for child in source.children:
+        _copy_vertex(child, vertex, prefix, machine, mapping)
+    return vertex
+
+
+def _copy_reaction(reaction, prefix, machine, mapping):
+    source = mapping[reaction.source]
+    target = mapping[reaction.target] if reaction.target is not None else None
+    ident = prefix + reaction.id
+    copy = Reaction(ident, source, target, "{}, inlined {}".format(
+        machine.where(), reaction.where.split(', ', 1)[1]))
+    copy.trigger = reaction.trigger
+    copy.guard = reaction.guard
+    copy.behavior = reaction.behavior
+    copy.propagation = reaction.propagation
+    copy.defer = reaction.defer
+    source.reactions.append(copy)
+
+
+def _merge_components(host, referenced, where):
+    for declaration in referenced.components:
+        own = host.component(declaration.id)
+        if own is None:
+            host.components.append(ComponentDeclaration(
+                declaration.id, declaration.type, declaration.priority, declaration.shared,
+                declaration.parameters, host.id))
+        elif own.type != declaration.type:
+            raise DocumentError("{}: the component '{}' is a {} here and a {} in the "
+                                "submachine".format(where, declaration.id, own.type,
+                                                    declaration.type))
+
+
+def _inline(state, machine, path, documents, chain):
+    where = "{}, submachine state '{}'".format(machine.where(), state.id)
+    referenced, ref_path = _resolve(state.submachine, path, documents)
+    key = (ref_path, referenced.id)
+    if key in chain:
+        raise DocumentError("{}: the reference '{}' is circular".format(
+            where, state.submachine))
+    _inline_all(referenced, ref_path, documents, chain + [key])
+    prefix = state.id + INLINE_SEPARATOR
+    mapping = {}
+    # the host's points stand for the referenced machine's points of the same name
+    own_points = {point.name: point for point in state.points()}
+    for child in referenced.root.children:
+        if child.kind in POINT_KINDS and child.name in own_points:
+            point = own_points.pop(child.name)
+            if point.kind != child.kind:
+                raise DocumentError("{}: the point '{}' is an {} point here and an {} "
+                                    "point in the submachine".format(
+                                        where, child.name, point.kind, child.kind))
+            mapping[child] = point
+        else:
+            _copy_vertex(child, state, prefix, machine, mapping)
+    if own_points:
+        raise DocumentError("{}: no point '{}' in the submachine".format(
+            where, sorted(own_points)[0]))
+    for vertex in referenced.vertices.values():
+        for reaction in vertex.reactions:
+            _copy_reaction(reaction, prefix, machine, mapping)
+    machine.pool |= referenced.pool
+    _merge_components(machine, referenced, where)
+    state.submachine = None
+
+
+def _inline_all(machine, path, documents, chain):
+    for vertex in list(machine.vertices.values()):
+        if vertex.submachine is not None:
+            _inline(vertex, machine, path, documents, chain)
+
+
+def load(path):
+    """Read the document, return the list of its state machines."""
+    documents = _Documents()
+    path = os.path.normpath(path)
+    machines = documents.get(path)
+    for machine in machines:
+        _inline_all(machine, path, documents, [(path, machine.id)])
+        _check(machine)
     return machines

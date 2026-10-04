@@ -22,12 +22,14 @@
 
 import hsmd_actions
 from hsmd_reader import (DispatcherError, ROOT, STATE, COMPOSITE, INITIAL, FINAL, CHOICE,
+                         SHALLOW, ENTRY, EXIT, TERMINATE, HISTORY_KINDS,
                          ACTION_FIRST, EVENT_ANY, EVENT_UNKNOWN)
 
 # outcome statuses
 FIRED = 'fired'
 REJECTED = 'rejected'
 DROPPED = 'dropped'
+DEFERRED = 'deferred'
 
 
 class ExecutionError(DispatcherError):
@@ -52,6 +54,7 @@ class MachineRun:
         self.host = host
         self.active = None
         self.finished = False
+        self.history = {}        # container id -> (last child id, last leaf id)
         self._fired = []
         for vertex in machine.vertices.values():
             for block in vertex.entry + vertex.exit:
@@ -82,13 +85,24 @@ class MachineRun:
         return result
 
     def snapshot(self):
-        return {'active': self.active.id if self.active is not None else None,
-                'finished': self.finished}
+        return {'active': self._ident(self.active), 'finished': self.finished,
+                'history': {k: list(v) for k, v in self.history.items()}}
 
     def restore(self, data):
-        ident = data['active']
-        self.active = self.machine.vertices[ident] if ident is not None else None
+        self.active = self._vertex(data['active'])
         self.finished = data['finished']
+        self.history = {k: tuple(v) for k, v in data['history'].items()}
+
+    @staticmethod
+    def _ident(vertex):
+        return vertex.id if vertex is not None else None
+
+    def _vertex(self, ident):
+        if ident is None:
+            return None
+        if ident == self.machine.root.id:
+            return self.machine.root
+        return self.machine.vertices[ident]
 
     # ------------------------------------------------------------------------
     # execution
@@ -111,6 +125,10 @@ class MachineRun:
             reaction, found = self._select(state, event)
             matched = matched or found
             parent = state.parent
+            if reaction is not None and reaction.defer:
+                # the inner state keeps the event for a later configuration
+                self.host.trace('defer', self.machine.id, reaction.id)
+                return MachineOutcome(self.machine.id, DEFERRED)
             if reaction is not None:
                 self._fire(reaction)
                 propagate = reaction.propagation
@@ -192,6 +210,13 @@ class MachineRun:
         if reaction.target is None:
             hsmd_actions.run(reaction.code, self.namespace)
             return
+        if reaction.target.kind == TERMINATE:
+            # no state is left, no exit action runs (PNST 984, 7.10.6)
+            hsmd_actions.run(reaction.code, self.namespace)
+            self.active = reaction.target
+            self.finished = True
+            self.host.trace('terminated', self.machine.id)
+            return
         if self.machine.transition_order == ACTION_FIRST:
             hsmd_actions.run(reaction.code, self.namespace)
             self._exit_to(reaction.owner)
@@ -202,11 +227,14 @@ class MachineRun:
 
     def _exit_to(self, owner):
         vertex = self.active
+        leaf = vertex
         while vertex is not owner and vertex.kind != ROOT:
             if vertex.is_state():
                 self.host.trace('exit', self.machine.id, vertex.id)
                 for block in vertex.exit:
                     hsmd_actions.run(block.code, self.namespace)
+            # the history of the container: its last child and the last leaf
+            self.history[vertex.parent.id] = (vertex.id, leaf.id)
             vertex = vertex.parent
         self.active = vertex
 
@@ -235,9 +263,42 @@ class MachineRun:
                 raise ExecutionError("{}, choice '{}': no true branch".format(
                     self.machine.where(), target.id))
             self._fire(reaction)
+        elif target.kind in HISTORY_KINDS:
+            self._enter_history(target)
+        elif target.kind == ENTRY:
+            # the container is entered, then the segment from the point
+            self._fire(target.reactions[0])
+        elif target.kind == EXIT:
+            self._leave_through(target)
         else:
             raise ExecutionError("{}: a transition to the pseudostate '{}'".format(
                 self.machine.where(), target.id))
+
+    def _enter_history(self, history):
+        container = history.parent
+        record = self.history.get(container.id)
+        if record is not None and self.machine.vertices[record[0]].kind != FINAL:
+            last = record[0] if history.kind == SHALLOW else record[1]
+            self.host.trace('history', self.machine.id, history.id, last)
+            self._arrive(self.machine.vertices[last], container)
+        elif history.reactions:
+            self._fire(history.reactions[0])
+        else:
+            self._enter_default(container)
+
+    def _leave_through(self, point):
+        container = point.parent
+        if container.kind == ROOT:
+            self.active = point
+            self.finished = True
+            self.host.trace('finished', self.machine.id)
+            return
+        self._exit_to(container.parent)
+        if point.reactions:
+            self._fire(point.reactions[0])
+        elif container.parent.kind == ROOT:
+            self.finished = True
+            self.host.trace('finished', self.machine.id)
 
     def _enter_default(self, container):
         if container.initial is None:

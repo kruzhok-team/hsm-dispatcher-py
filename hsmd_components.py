@@ -39,11 +39,13 @@ class Component:
     variables the text of the diagram uses and raises the signals."""
 
     priority = 0
+    shared = False       # one instance per document, signals to every machine
 
     def __init__(self, ident, dispatcher, **parameters):
         self.id = ident
         self.dispatcher = dispatcher
         self.parameters = parameters     # of the declaration, as strings
+        self.machine = None              # the owning machine of a local component
 
     def signal(self, name, **parameters):
         """Raise the event <id>.<name>."""

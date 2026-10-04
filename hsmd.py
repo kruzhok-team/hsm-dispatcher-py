@@ -30,13 +30,13 @@ import hsmd_reader
 from hsmd_actions import ActionError, EVENT_NAME
 from hsmd_components import Component, register
 from hsmd_reader import DispatcherError, DocumentError
-from hsmd_step import (MachineRun, ExecutionError, FIRED, REJECTED, DROPPED)
+from hsmd_step import (MachineRun, ExecutionError, FIRED, REJECTED, DROPPED, DEFERRED)
 
 __all__ = ['Dispatcher', 'Event', 'Outcome', 'Component', 'register',
            'DispatcherError', 'DocumentError', 'ActionError', 'ExecutionError',
-           'StoppedError', 'FIRED', 'REJECTED', 'DROPPED']
+           'StoppedError', 'FIRED', 'REJECTED', 'DROPPED', 'DEFERRED']
 
-SNAPSHOT_VERSION = 1
+SNAPSHOT_VERSION = 2
 SIGNAL_SEPARATOR = '.'
 
 
@@ -46,12 +46,13 @@ class StoppedError(DispatcherError):
 
 class Event:
     """An event: the name, the priority and the named parameters, which are
-    visible as attributes."""
+    visible as attributes. The machine is the addressed one, None for all."""
 
-    def __init__(self, name, priority=0, parameters=None):
+    def __init__(self, name, priority=0, parameters=None, machine=None):
         self.name = name
         self.priority = priority
         self.parameters = dict(parameters or {})
+        self.machine = machine
         self.run = None          # completion events: the machine
         self.vertex = None       # completion events: the completed state
 
@@ -73,7 +74,7 @@ class Outcome:
     @property
     def status(self):
         statuses = [r.status for r in self.results]
-        for status in (FIRED, REJECTED):
+        for status in (FIRED, DEFERRED, REJECTED):
             if status in statuses:
                 return status
         return DROPPED
@@ -92,33 +93,68 @@ class Dispatcher:
         self._trace = trace
         self._queue = []
         self._completions = collections.deque()
+        self._again = collections.deque()      # deferred events offered again
+        self._deferred = {}                    # machine id -> the deferred events
         self._sequence = 0
         self._runs = []
-        self._components = {}
-        for machine in hsmd_reader.load(path):
-            components = self._create_components(machine)
-            self._components[machine.id] = components
-            self._runs.append(MachineRun(machine, dict(components), self))
+        self._shared = {}                      # id -> component
+        self._declarations = {}                # id -> the first shared declaration
+        self._local = {}                       # machine id -> id -> component
+        machines = hsmd_reader.load(path)
+        for machine in machines:
+            self._local[machine.id] = {}
+            self._deferred[machine.id] = []
+            namespace = self._create_components(machine)
+            self._runs.append(MachineRun(machine, namespace, self))
+        self._check_identifiers()
 
     def _create_components(self, machine):
-        components = {}
+        namespace = {}
         for declaration in machine.components:
             where = "{}, component '{}'".format(machine.where(), declaration.id)
             cls = hsmd_components.find(declaration.type)
             if cls is None:
                 raise DocumentError("{}: unknown type '{}'".format(where, declaration.type))
-            if declaration.id in components:
-                raise DocumentError("{}: declared twice".format(where))
             if declaration.id == EVENT_NAME:
                 raise DocumentError("{}: the name is reserved".format(where))
+            shared = declaration.shared if declaration.shared is not None else cls.shared
+            if shared and declaration.id in self._shared:
+                first = self._declarations[declaration.id]
+                if not first.same(declaration):
+                    raise DocumentError("{}: the shared component is declared differently "
+                                        "in the machine '{}'".format(where, first.machine))
+                namespace[declaration.id] = self._shared[declaration.id]
+                continue
             try:
                 component = cls(declaration.id, self, **declaration.parameters)
             except TypeError as e:
                 raise DocumentError("{}: {}".format(where, e)) from e
             if declaration.priority is not None:
                 component.priority = declaration.priority
-            components[declaration.id] = component
-        return components
+            component.shared = shared
+            if shared:
+                self._shared[declaration.id] = component
+                self._declarations[declaration.id] = declaration
+            else:
+                component.machine = machine.id
+                self._local[machine.id][declaration.id] = component
+            namespace[declaration.id] = component
+        return namespace
+
+    def _check_identifiers(self):
+        for mid, components in self._local.items():
+            for ident in components:
+                if ident in self._shared:
+                    raise DocumentError("machine '{}', component '{}': local here and shared "
+                                        "in the machine '{}'".format(
+                                            mid, ident, self._declarations[ident].machine))
+
+    def _components(self):
+        for component in self._shared.values():
+            yield component
+        for components in self._local.values():
+            for component in components.values():
+                yield component
 
     # ------------------------------------------------------------------------
     # the interface of the application
@@ -129,10 +165,12 @@ class Dispatcher:
         self._guarded(lambda: [run.start() for run in self._runs])
         return self.run()
 
-    def post(self, name, priority=0, **parameters):
-        """Put an event into the queue."""
+    def post(self, name, priority=0, machine=None, **parameters):
+        """Put an event into the queue, for every machine or for one."""
         self._check()
-        return self._post(Event(name, priority, parameters))
+        if machine is not None:
+            machine = self._run(machine).machine.id
+        return self._post(Event(name, priority, parameters, machine))
 
     def run(self):
         """Process the queue until it is empty, return the outcomes."""
@@ -156,9 +194,8 @@ class Dispatcher:
         """Let the components check the clock, then process the queue."""
         self._check()
         now = self.clock()
-        for components in self._components.values():
-            for component in components.values():
-                self._guarded(lambda c=component: c.tick(now))
+        for component in list(self._components()):
+            self._guarded(lambda c=component: c.tick(now))
         return self.run()
 
     def states(self, machine=None):
@@ -177,8 +214,13 @@ class Dispatcher:
             'queue': [self._event_data(item[2]) for item in sorted(self._queue)],
             'completions': [{'machine': e.run.machine.id, 'vertex': e.vertex.id}
                             for e in self._completions],
-            'components': {mid: {cid: c.snapshot() for cid, c in components.items()}
-                           for mid, components in self._components.items()},
+            'deferred': {mid: [self._event_data(e) for e in events]
+                         for mid, events in self._deferred.items()},
+            'components': {
+                'shared': {cid: c.snapshot() for cid, c in self._shared.items()},
+                'local': {mid: {cid: c.snapshot() for cid, c in components.items()}
+                          for mid, components in self._local.items()},
+            },
         }
 
     def restore(self, data):
@@ -186,17 +228,22 @@ class Dispatcher:
             raise DispatcherError('unknown snapshot version')
         self._queue = []
         self._completions.clear()
+        self._again.clear()
         self._sequence = 0
         for run in self._runs:
             run.restore(data['machines'][run.machine.id])
         for item in data['queue']:
-            self._post(Event(item['name'], item['priority'], item['parameters']))
+            self._post(self._event(item))
         for item in data['completions']:
             run = self._run(item['machine'])
             self.complete(run, run.machine.vertices[item['vertex']])
-        for mid, components in self._components.items():
+        for mid in self._deferred:
+            self._deferred[mid] = [self._event(item) for item in data['deferred'][mid]]
+        for cid, component in self._shared.items():
+            component.restore(data['components']['shared'][cid])
+        for mid, components in self._local.items():
             for cid, component in components.items():
-                component.restore(data['components'][mid][cid])
+                component.restore(data['components']['local'][mid][cid])
         self.stopped = False
 
     # ------------------------------------------------------------------------
@@ -204,14 +251,14 @@ class Dispatcher:
 
     def signal(self, component, name, parameters):
         self._post(Event(component.id + SIGNAL_SEPARATOR + name,
-                         component.priority, parameters))
+                         component.priority, parameters, component.machine))
 
     def message(self, component, text):
         self.trace('print', component.id, text)
         self.output.write(text + '\n')
 
     def complete(self, run, vertex):
-        event = Event('')
+        event = Event('', machine=run.machine.id)
         event.run = run
         event.vertex = vertex
         self._completions.append(event)
@@ -247,12 +294,17 @@ class Dispatcher:
         # the highest priority first, then the order of arrival
         self._sequence += 1
         heapq.heappush(self._queue, (-event.priority, self._sequence, event))
-        self.trace('post', event.name, event.priority)
+        if event.machine is None:
+            self.trace('post', event.name, event.priority)
+        else:
+            self.trace('post', event.name, event.priority, event.machine)
         return event
 
     def _take(self):
         if self._completions:
             return self._completions.popleft()
+        if self._again:
+            return self._again.popleft()
         if self._queue:
             return heapq.heappop(self._queue)[2]
         return None
@@ -261,16 +313,29 @@ class Dispatcher:
         if event.vertex is not None:
             runs = [event.run]
         else:
-            runs = self._runs
+            runs = self._runs if event.machine is None else [self._run(event.machine)]
             self.trace('event', event.name)
         results = []
         for run in runs:
+            before = run.active
             result = run.step(event)
             self.trace('outcome', result.machine, result.status, *result.transitions)
             results.append(result)
+            if result.status == DEFERRED:
+                self._deferred[run.machine.id].append(event)
+            elif run.active is not before and self._deferred[run.machine.id]:
+                # a new configuration: the deferred events are offered again
+                for deferred in self._deferred[run.machine.id]:
+                    deferred.machine = run.machine.id
+                    self._again.append(deferred)
+                self._deferred[run.machine.id] = []
         return Outcome(event, results)
 
     @staticmethod
     def _event_data(event):
         return {'name': event.name, 'priority': event.priority,
-                'parameters': event.parameters}
+                'parameters': event.parameters, 'machine': event.machine}
+
+    @staticmethod
+    def _event(data):
+        return Event(data['name'], data['priority'], data['parameters'], data['machine'])
