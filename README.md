@@ -37,8 +37,10 @@ dispatcher.tick()                    # call it regularly: the timers
 
 The diagram declares its components with `CGML_COMPONENT <id>` comments and
 calls them from the action text, which is Python. The standard component
-types are `Timer` and `Log`. The modules are plain files: add the directory
-of the repository to the Python path.
+types are `Timer` and `Log`. A component is local to its machine or shared
+by the machines of the document (`shared/ yes` in the declaration). The
+modules are plain files: add the directory of the repository to the Python
+path.
 
 ## Tests
 

@@ -1,6 +1,6 @@
 # The Python HSM Dispatcher Architecture
 
-Document version: 0.3 (2026-10-02)
+Document version: 0.4 (2026-10-04)
 
 The dispatcher executes Hierarchical State Machine (HSM) diagrams at run
 time. The diagrams are stored in the CyberiadaML-GraphML format (CGML,
@@ -32,6 +32,8 @@ The requirements come from the first user of the dispatcher, the
 | R10 | Report every step in a trace usable by tests and diagnostics. | The trace |
 | R11 | A mistake in the text of the diagram stops the machine and names the place. | Errors |
 | R12 | The diagram prints messages; they reach the trace and a stream chosen by the application. | Printing |
+| R13 | Several machines of one document share the components that stand for one thing (the harness) and keep private the ones that do not (a timer). | Components |
+| R14 | A machine is reused as a fragment of another one through a submachine state. | Submachine states |
 
 ## Standards
 
@@ -45,13 +47,13 @@ What the dispatcher implements and where it is defined:
 | PNST 984, 7.4.6.7 | the special events `ANY` and `UNKNOWN` |
 | PNST 984, 7.6.6.4 | transitions without a trigger and the completion event |
 | PNST 984, 7.6.6.7 | the sequence of a transition and its alternative order |
-| PNST 984, 7.6.7.4 | deferred events (stage 2) |
+| PNST 984, 7.6.7.4 | deferred events |
 | PNST 984, 7.10.6 | the pseudostates: initial, choice, history, entry and exit points, terminate |
 | PNST 1044, 6.1 | several state machines in a document |
 | PNST 1044, 6.3.2 | a transition between a composite state and its substate is local: the composite state is not left |
 | PNST 1044, 6.8 | the text of events, guards and behaviour: `entry/`, `exit/`, `Event [guard] propagate/ behaviour`, `[else]` |
 | PNST 1044, 6.9 | the meta parameters `transitionOrder` (default `actionFirst`) and `eventPropagation` (default `block`) |
-| PNST 1044, 8.1, 8.2, 8.3 | submachine states, history, entry and exit points (stage 2) |
+| PNST 1044, 8.1, 8.2, 8.3 | submachine states, history, entry and exit points |
 | PNST 1044, 10.3 | the components: `CGML_COMPONENT <id>` with the `type` parameter |
 
 The standards leave these points undefined. The dispatcher fixes them:
@@ -64,7 +66,11 @@ The standards leave these points undefined. The dispatcher fixes them:
 | the event pool for `ANY` and `UNKNOWN` | the trigger names used in the machine |
 | a propagated event after the inner state has reacted (984, 7.4.6.6) | offered to the next enclosing state while that state is still active |
 | the parameters of an event in the text (984, 7.6.7.2) | the current event is visible as `event` |
-| the communication of the machines of one document (1044, 6.1.2) | every event is offered to every machine |
+| the communication of the machines of one document (1044, 6.1.2) | through the shared components; an event of the application is offered to every machine |
+| the place of a deferred event when it is offered again (984, 7.6.7.4) | ahead of the queue, after the completion events |
+| an exit point without an outgoing transition (984, 7.10.6) | the state is left and the machine stays in the enclosing state |
+| a history pseudostate without a default transition, never entered (984, 7.10.6) | the initial pseudostate of the container |
+| a machine referenced by a submachine state (1044, 8.1) | runs on its own as well, like every machine of the document |
 | a failure of the action text | the machine stops, the error goes to the application |
 
 ## Structure
@@ -92,7 +98,7 @@ The modules are plain files in the repository root; there is no package.
 | Module | Role |
 |---|---|
 | `hsmd.py` | The `Dispatcher`: the queue, the public interface, the snapshot, the trace. The only module an application imports besides the component base. |
-| `hsmd_reader.py` | Opens the document with the binding and builds the model. |
+| `hsmd_reader.py` | Opens the document with the binding and builds the model; copies the referenced machines into the submachine states. |
 | `hsmd_step.py` | The step of one machine for one event. Keeps the active configuration. |
 | `hsmd_actions.py` | Compiles and runs the action and guard text. |
 | `hsmd_components.py` | The `Component` base class, the registry of types, the standard types `Timer` and `Log`. |
@@ -111,21 +117,22 @@ state and `get_transitions()` of a machine. For every machine it builds:
 
 * the states with their parents and their `entry`, `exit` and internal
   transition blocks, in the document order;
-* the pseudostates: initial, final, choice (history, points and terminate
-  in stage 2);
+* the pseudostates: initial, final, choice, shallow and deep history, entry
+  and exit points, terminate;
 * the transitions with the trigger, the guard, the behaviour, the
   propagation flag and the owner - the nearest common ancestor of the source
   and the target;
 * the pool of the trigger names;
-* the component declarations: the identifier and the parameters of each
-  `CGML_COMPONENT <id>` comment.
+* the component declarations: the identifier, the type, the priority, the
+  visibility and the other parameters of each `CGML_COMPONENT <id>` comment.
 
 The binding leaves two things to the caller, and the reader resolves them:
 the meta defaults (`actionFirst`, `block`) and the parameters in the body of
 a component comment (`name/ value` blocks, PNST 1044, 10.3.1).
 
-A document that uses an element outside the current stage is refused when
-it is loaded, not when the element is reached.
+A document that uses an element outside the current stage (an orthogonal
+region, a `do/` activity) is refused when it is loaded, not when the
+element is reached.
 
 ## Events and the queue
 
@@ -167,11 +174,11 @@ The consequences of the priorities are a part of the rule:
 * the priority has an effect only when several events wait at once.
 
 A document may hold several machines. Each machine has its own
-configuration and its own components. An event is offered to every machine,
-in the document order, each making its own step. The machines influence
-each other only through events, so a component identifier should be unique
-in the document: two machines declaring the same identifier receive each
-other's signals under one name.
+configuration. An event of the application is offered to every machine, in
+the document order, each making its own step; the signal of a shared
+component is offered to every machine too, the signal of a local one to its
+own machine only (see "Components"). The machines influence each other
+through the shared components only.
 
 ## The step
 
@@ -280,8 +287,31 @@ available to the text).
 A component type is a subclass of `Component` registered under its `type`
 name. The application registers its types before the document is loaded; a
 declaration with an unknown type is an error. The parameters of the
-declaration other than `type` and `priority` are passed to the type as
-strings. The identifier `event` is reserved.
+declaration other than `type`, `priority` and `shared` are passed to the
+type as strings. The identifier `event` is reserved.
+
+### Visibility
+
+A component is **local** or **shared**. A local component belongs to the
+machine that declares it: its own instance, its signals delivered to that
+machine only, so two machines may both declare a `timer1` of their own. A
+shared component exists once in the document: it is created at its first
+declaration, every later declaration under the same identifier refers to
+it, and its signals reach every machine. The type decides
+(`Component.shared`, `False` unless the type says otherwise; `Timer` and
+`Log` are local), and a declaration may override the type:
+
+```
+CGML_COMPONENT t
+type/ Timer
+
+shared/ yes
+```
+
+The declarations of a shared component must be identical apart from
+`shared`: another type, priority or parameter in a later machine is an
+error, and so is an identifier that is local in one machine and shared in
+another.
 
 The signals, methods and variables of a type can be exported as a platform
 description in the form used by the Cyberiada editors, so the calls can be
@@ -327,6 +357,64 @@ the trace and is written to the output stream of the dispatcher - the
 standard error stream unless the application passes another one. The text
 of a diagram does not call the Python `print`.
 
+## Deferred events
+
+An internal transition `E/ defer` keeps the event `E` for later (PNST 984,
+7.6.7.4). The deferring block is a candidate like any other: it is found
+from the innermost state outwards, so a substate deferring an event beats an
+enclosing state handling it, and a substate handling it beats an enclosing
+state deferring it. A deferred event waits in a pool of its machine. After
+every step that changed the active configuration the pool is offered again,
+in the deferral order, ahead of the queue (the completion events still go
+first); an event deferred again returns to the pool. The outcome of a
+deferred event is `deferred`.
+
+## History
+
+A history pseudostate stands for the last state of its container (PNST 984,
+7.10.6). The dispatcher records, whenever a container is left, its last
+direct substate and the last leaf under it. A transition to a shallow
+history enters the last direct substate (then its default entry if it is
+composite); to a deep history, the whole last configuration, every state
+entered once. When the container was never active, or its last substate was
+a final state, the default transition of the history pseudostate is taken;
+without one, the initial pseudostate of the container.
+
+## Entry and exit points
+
+A transition into an entry point enters the point's container (its entry
+actions run) and then follows the one transition from the point inside the
+container (PNST 984, 7.10.6). A transition into an exit point runs its
+behaviour, leaves the active states up to and including the container, and
+follows the transition from the point outside the container; a point
+without one leaves the machine in the enclosing state. An exit point at
+the top level of a machine finishes the machine. The transitions of the
+points carry no event.
+
+## Submachine states
+
+A submachine state refers to a machine of the same document by identifier,
+or to a machine of another document by `path` or `path#id` relative to the
+document (PNST 1044, 8.1). The reader copies the referenced machine into
+the state when the document is loaded: the state becomes a composite state
+whose substates carry the identifiers `<state>/<identifier>`, whose
+initial pseudostate is the referenced machine's, and whose entry and exit
+points stand for the referenced machine's top-level points of the same name
+(a point of the state without a counterpart is an error). The inlined
+fragment runs in the configuration, the queue and the component namespace
+of its host; the referenced declarations are merged by identifier - the
+same type is one component, a different type is an error, a new identifier
+is added. A circular reference is an error. The meta parameters of an
+external document are ignored: the host's apply. A machine referenced in
+the same document runs on its own as well, so it needs an initial
+pseudostate like any other.
+
+## Terminate
+
+A transition to a terminate pseudostate runs its behaviour and ends the
+machine at once: no state is left and no exit action runs (PNST 984,
+7.10.6).
+
 ## Outcomes
 
 Processing an event produces an outcome for each machine:
@@ -334,6 +422,7 @@ Processing an event produces an outcome for each machine:
 | Status | Meaning |
 |---|---|
 | `fired` | one or more transitions were executed; the outcome lists them, the branch of a choice included |
+| `deferred` | the event was kept by a deferring state |
 | `rejected` | a trigger matched, but every guard was false |
 | `dropped` | no trigger of the active states matched (PNST 984, 7.4.6.1) |
 
@@ -348,7 +437,7 @@ it with a record - a tuple, the kind first:
 
 | Record | When |
 |---|---|
-| `post`, name, priority | an event is put into the queue |
+| `post`, name, priority[, machine] | an event is put into the queue; the machine when it is the only addressee |
 | `event`, name | an event is taken from the queue |
 | `guard`, machine, transition, text, value | a guard is evaluated |
 | `ambiguous`, machine, chosen, others | several candidates were enabled |
@@ -356,13 +445,17 @@ it with a record - a tuple, the kind first:
 | `exit`, machine, state | a state is left, before its exit actions |
 | `enter`, machine, state | a state is entered, before its entry actions |
 | `completion`, machine, state | a completion event is raised |
+| `defer`, machine, transition | an event is deferred |
+| `history`, machine, pseudostate, state | a history pseudostate restores a state |
+| `terminated`, machine | the machine has reached a terminate pseudostate |
 | `finished`, machine | the machine has reached its final state |
 | `print`, component, line | a message of the diagram |
 | `outcome`, machine, status, transitions | the result of a step |
 | `error`, message | the dispatcher is stopped |
 
 An internal transition is named by its state and its number in the text:
-`a#1`. The tests compare the trace with the expected one.
+`a#1`; an element of an inlined submachine by its state and its own
+identifier: `sub/m2s`. The tests compare the trace with the expected one.
 
 ## Errors
 
@@ -377,14 +470,15 @@ current stage, a syntax error in the text - are raised when it is loaded.
 
 ## The snapshot
 
-`snapshot()` returns the execution state as a dictionary of plain data:
-the version of the format, the active vertex and the finished flag of every
-machine, the queue, the waiting completion events, the data of the
-components (each component reports its own; a timer reports the time left,
+`snapshot()` returns the execution state as a dictionary of plain data: the
+version of the format, the active vertex, the finished flag and the history
+of every machine, the queue, the waiting completion events, the deferred
+events of every machine, the data of the components, the shared and the local
+ones apart (each component reports its own; a timer reports the time left,
 not the deadline). `restore()` continues from it, in the same dispatcher or
-in a new one with the same document, and clears the stopped state. The application decides where the snapshot is stored and
-when it is taken; the natural moment is after `run()`, when the queue is
-empty.
+in a new one with the same document, and clears the stopped state. The
+application decides where the snapshot is stored and when it is taken; the
+natural moment is after `run()`, when the queue is empty.
 
 ## Interface
 
@@ -394,7 +488,8 @@ empty.
   document, create the components;
 * `start()` - enter the initial configuration of every machine, process
   the queue, return the outcomes;
-* `post(name, priority=0, **parameters)` - put an event into the queue;
+* `post(name, priority=0, machine=None, **parameters)` - put an event into
+  the queue, for every machine or for the named one;
 * `run()` - process the queue until it is empty, return the outcomes;
 * `send(name, **parameters)` - `post()` and `run()`, return the outcome of
   the event;
@@ -410,9 +505,10 @@ empty.
 A machine is named by its identifier or its name; without the argument the
 first machine of the document is meant.
 
-`Event`: `name`, `priority`, `parameters`; the parameters are attributes
-too. `Outcome`: `event`, `status`, `transitions`, and `results` - the
-status and the transitions of each machine.
+`Event`: `name`, `priority`, `parameters`, `machine` (the addressee, `None`
+for every machine); the parameters are attributes too. `Outcome`: `event`,
+`status`, `transitions`, and `results` - the status and the transitions of
+each machine.
 
 The errors are subclasses of `DispatcherError`: `DocumentError` (the
 document cannot be loaded), `ActionError` (the text has failed; `where`,
@@ -425,6 +521,8 @@ further), `StoppedError` (the dispatcher is stopped).
 * `Component(ident, dispatcher, **parameters)` - the constructor a type
   keeps; `id`, `dispatcher`, `parameters`;
 * `Component.priority` - the default priority of the type;
+* `Component.shared` - the default visibility of the type; `machine` - the
+  owning machine of a local instance, `None` for a shared one;
 * `Component.signal(name, **parameters)` - raise the event `<id>.<name>`;
 * `Component.tick(now)` - called from `Dispatcher.tick()`;
 * `Component.snapshot()`, `Component.restore(data)`.
@@ -433,8 +531,8 @@ further), `StoppedError` (the dispatcher is stopped).
 
 | Stage | Elements |
 |---|---|
-| 1 | simple and composite states with one region, initial and final pseudostates, choice, `entry/` and `exit/`, internal transitions, guards and `[else]`, transitions without a trigger, `transitionOrder`, `eventPropagation` with `propagate` and `block`, `ANY`, `UNKNOWN`, several machines, components, the Timer, the Log, priorities, outcomes, the trace, the snapshot |
-| 2 | shallow and deep history, `defer`, entry and exit points, submachine states, terminate |
+| 1 (done) | simple and composite states with one region, initial and final pseudostates, choice, `entry/` and `exit/`, internal transitions, guards and `[else]`, transitions without a trigger, `transitionOrder`, `eventPropagation` with `propagate` and `block`, `ANY`, `UNKNOWN`, several machines, components, the Timer, the Log, priorities, outcomes, the trace, the snapshot |
+| 2 (done) | shallow and deep history, `defer`, entry and exit points, submachine states, terminate, the visibility of the components |
 | 3 | orthogonal regions and `do/` activities |
 
 Stage 3 needs the support of the regions and of the `do/` blocks in
@@ -448,11 +546,15 @@ start, post, send, run, clock, tick, the queries, snapshot, restore; the
 output is the trace and the outcomes. The clock and the output stream
 belong to the runner, `test/run.py`. There is a diagram for each rule of
 this document; every diagram is checked with the validator of
-`cyberiadaml-compat-tests` first.
+`cyberiadaml-compat-tests` first. The diagrams `test/graphs/lib/` are the
+external documents of the submachine tests.
 
 ## Open questions
 
-* the place of the deferred events in the queue (stage 2);
 * the execution of `do/`: a synchronous call or an activity with a
   completion event (stage 3);
-* the form of the exported platform description.
+* the form of the exported platform description;
+* the validator of `cyberiadaml-compat-tests` requires a component
+  identifier unique in the document (CGML-10.3-1); the dispatcher reads
+  PNST 1044, 10.3.2 per machine, and the test runner ignores that rule
+  until the validator follows.
