@@ -69,7 +69,7 @@ log.print('exit B')</data>
     </node>
     <edge id="init-a" source="init" target="a"/>
     <edge id="a-b" source="a" target="b">
-      <data key="dData">t.timeout [n.value &gt; 1]/</data>
+      <data key="dData">t.TIMEOUT [n.value &gt; 1]/</data>
     </edge>
   </graph>
 </graphml>

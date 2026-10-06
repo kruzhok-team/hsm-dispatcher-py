@@ -61,10 +61,10 @@ priority/ 10</data>
 t2.start(100)
 t1.start(100)
 
-t1.timeout/
+t1.TIMEOUT/
 log.print('t1')
 
-t2.timeout/
+t2.TIMEOUT/
 log.print('t2', t2.difference)
 
 stop/

@@ -27,14 +27,14 @@
 > tick
 > clock 1
 > tick
-  post t.timeout 0 G
-  event t.timeout
+  post t.TIMEOUT 0 G
+  event t.TIMEOUT
   guard G a-b n.value > 1 True
   fire G a-b
   exit G a
   enter G b
   print log enter B
   outcome G fired a-b
-= t.timeout fired a-b
+= t.TIMEOUT fired a-b
 > states
 = b

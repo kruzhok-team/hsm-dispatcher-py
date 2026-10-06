@@ -32,20 +32,20 @@
 = go fired a-b x-y
 > clock 100
 > tick
-  post timer1.timeout 0 M1
-  event timer1.timeout
+  post timer1.TIMEOUT 0 M1
+  event timer1.TIMEOUT
   fire M1 b#1
   print log timeout in M1
   outcome M1 fired b#1
-= timer1.timeout fired b#1
+= timer1.TIMEOUT fired b#1
 > clock 50
 > tick
-  post timer1.timeout 0 M2
-  event timer1.timeout
+  post timer1.TIMEOUT 0 M2
+  event timer1.TIMEOUT
   fire M2 y#1
   print log timeout in M2
   outcome M2 fired y#1
-= timer1.timeout fired y#1
+= timer1.TIMEOUT fired y#1
 > states First
 = b
 > states Second

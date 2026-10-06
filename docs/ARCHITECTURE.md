@@ -140,8 +140,8 @@ An event has a name, optional named parameters and a priority. It comes
 from one of two sources:
 
 * the application: `post('start')`, `post('go', speed=5)`;
-* a component: the signal `timeout` of the component `timer1` is the event
-  `timer1.timeout`.
+* a component: the signal `TIMEOUT` of the component `timer1` is the event
+  `timer1.TIMEOUT`.
 
 All waiting events are in one queue. The next event to process is the one
 with the highest priority; among equal priorities, the one that arrived
@@ -163,7 +163,7 @@ another one.
 | Waiting, in the order of arrival | Priority | Processed |
 |---|---|---|
 | `sensor.changed` | 0 | third |
-| `timer1.timeout` | 10 | first |
+| `timer1.TIMEOUT` | 10 | first |
 | `alarm.raised` | 10 | second |
 
 The consequences of the priorities are a part of the rule:
@@ -325,11 +325,11 @@ dispatcher provides the same one:
 
 | Member | Kind | Meaning |
 |---|---|---|
-| `timeout` | signal | the interval has passed; repeats every interval |
+| `TIMEOUT` | signal | the interval has passed; repeats every interval |
 | `start(interval)` | method | start the timer, the interval is in milliseconds |
 | `reset()` | method | begin the count again |
 | `enable()`, `disable()` | methods | resume and stop the timer |
-| `difference` | variable | the time left before the next `timeout` |
+| `difference` | variable | the time left before the next `TIMEOUT` |
 
 The dispatcher creates no threads. The application calls `tick()`; every
 component compares the clock with its deadlines and raises its signals,
@@ -337,7 +337,7 @@ then the queue is processed. The clock is a parameter of the dispatcher, a
 function that returns seconds like `time.monotonic`: the tests pass their
 own and advance the time by hand.
 
-The timer counts in whole milliseconds. It raises one `timeout` in a
+The timer counts in whole milliseconds. It raises one `TIMEOUT` in a
 `tick()` at most and counts the next interval from that tick, so a late
 `tick()` does not produce a burst. `enable()` and `reset()` start the count
 again; `disable()` keeps the time left in `difference`.

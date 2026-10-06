@@ -63,7 +63,7 @@ shared/ no</data>
 t.start(100)
 bus.ping('local')
 
-t.timeout/
+t.TIMEOUT/
 log.print('M1 timeout')
 
 bus.ping/
@@ -93,7 +93,7 @@ priority/ 7</data>
     </node>
     <node id="x">
       <data key="dName">X</data>
-      <data key="dData">t.timeout/
+      <data key="dData">t.TIMEOUT/
 log.print('M2 timeout')
 
 bus.ping/

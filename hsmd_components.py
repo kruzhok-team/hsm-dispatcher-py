@@ -64,7 +64,7 @@ class Component:
 class Timer(Component):
     """The periodic timer; the time is counted in whole milliseconds."""
 
-    SIGNAL_TIMEOUT = 'timeout'
+    SIGNAL_TIMEOUT = 'TIMEOUT'
 
     def __init__(self, ident, dispatcher, **parameters):
         Component.__init__(self, ident, dispatcher, **parameters)
@@ -94,7 +94,7 @@ class Timer(Component):
 
     @property
     def difference(self):
-        """The time left before the next timeout."""
+        """The time left before the next TIMEOUT."""
         if not self.enabled:
             return self.remaining
         return max(0, self.deadline - self._now())

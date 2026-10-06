@@ -58,7 +58,7 @@ timer1.start(100)</data>
     </node>
     <node id="b">
       <data key="dName">B</data>
-      <data key="dData">timer1.timeout/
+      <data key="dData">timer1.TIMEOUT/
 log.print('timeout in M1')
 
 bus.ping/
@@ -97,7 +97,7 @@ bus.ping('from M1')</data>
     </node>
     <node id="y">
       <data key="dName">Y</data>
-      <data key="dData">timer1.timeout/
+      <data key="dData">timer1.TIMEOUT/
 log.print('timeout in M2')
 
 bus.ping/
