@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hsm-dispatcher-py"
+version = "0.1.0"
+description = "The run-time interpreter of the CyberiadaML hierarchical state machine diagrams"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [{name = "Alexey Fedoseev", email = "aleksey@fedoseev.net"}]
+classifiers = [
+    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+    "Programming Language :: Python :: 3",
+]
+
+# the CyberiadaML module of libcyberiadamlpp-py is required as well; it is
+# not a pip package and is installed by its own build
+
+[tool.setuptools]
+py-modules = ["hsmd", "hsmd_reader", "hsmd_actions", "hsmd_step", "hsmd_components"]
