@@ -6,20 +6,20 @@
   fire G ainit-b
   enter G b
   print log enter B
-> send e2
-  post e2 0
-  event e2
+> send E2
+  post E2 0
+  event E2
   fire G b#2
-  print log e2 in B
+  print log E2 in B
   outcome G fired b#2
-= e2 fired b#2
+= E2 fired b#2
 > states
 = a b
-> send e1
-  post e1 0
-  event e1
+> send E1
+  post E1 0
+  event E1
   fire G b#1
-  print log e1 in B
+  print log E1 in B
   fire G a-d
   exit G b
   print log exit B
@@ -28,6 +28,6 @@
   enter G d
   print log enter D
   outcome G fired b#1 a-d
-= e1 fired b#1 a-d
+= E1 fired b#1 a-d
 > states
 = d

@@ -1,7 +1,7 @@
 # the default propagate and the block flag
 load 07-propagation-default.graphml
 start
-send e2
+send E2
 states
-send e1
+send E1
 states

@@ -46,7 +46,7 @@
       <data key="dData">entry/
 log.print('a', 1, 2.5, None)
 
-say/
+SAY/
 log.print(event.text)</data>
     </node>
     <edge id="init-a" source="init" target="a"/>

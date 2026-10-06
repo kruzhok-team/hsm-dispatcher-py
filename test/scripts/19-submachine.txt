@@ -5,7 +5,7 @@ states
 states M2
 triggers
 # the host leaves through Done; the worker itself reaches its exit point
-send finish
+send FINISH
 states
 states M2
 finished M2
@@ -13,9 +13,9 @@ finished M2
 load 19-submachine-ext.graphml
 start
 states
-send go
+send GO
 states
-send fin
+send FIN
 states
 error load 19-submachine-cycle.graphml
 error load 19-submachine-point.graphml

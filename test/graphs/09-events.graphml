@@ -48,22 +48,22 @@
     </node>
     <node id="a">
       <data key="dName">A</data>
-      <data key="dData">add [event.amount &gt; 0]/
+      <data key="dData">ADD [event.amount &gt; 0]/
 n.add(event.amount)
 
-add [else]/
+ADD [else]/
 log.print('skip', event.amount)
 
-show/
+SHOW/
 log.print(event.name, n.value)
 
-low/
+LOW/
 log.print(event.name)
 
-high/
+HIGH/
 log.print(event.name, event.mark)
 
-higher/
+HIGHER/
 log.print(event.name)</data>
     </node>
     <edge id="init-a" source="init" target="a"/>

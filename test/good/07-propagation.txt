@@ -6,20 +6,20 @@
   fire G ainit-b
   enter G b
   print log enter B
-> send e4
-  post e4 0
-  event e4
+> send E4
+  post E4 0
+  event E4
   fire G b#2
-  print log e4 in B
+  print log E4 in B
   outcome G fired b#2
-= e4 fired b#2
+= E4 fired b#2
 > states
 = a b
-> send e1
-  post e1 0
-  event e1
+> send E1
+  post E1 0
+  event E1
   fire G b#1
-  print log e1 in B
+  print log E1 in B
   fire G a-d
   exit G b
   print log exit B
@@ -28,10 +28,10 @@
   enter G d
   print log enter D
   outcome G fired b#1 a-d
-= e1 fired b#1 a-d
-> send back
-  post back 0
-  event back
+= E1 fired b#1 a-d
+> send BACK
+  post BACK 0
+  event BACK
   fire G d-a
   exit G d
   print log exit D
@@ -41,10 +41,10 @@
   enter G b
   print log enter B
   outcome G fired d-a
-= back fired d-a
-> send e2
-  post e2 0
-  event e2
+= BACK fired d-a
+> send E2
+  post E2 0
+  event E2
   fire G b-c
   exit G b
   print log exit B
@@ -58,10 +58,10 @@
   enter G d
   print log enter D
   outcome G fired b-c a-d#2
-= e2 fired b-c a-d#2
-> send back
-  post back 0
-  event back
+= E2 fired b-c a-d#2
+> send BACK
+  post BACK 0
+  event BACK
   fire G d-a
   exit G d
   print log exit D
@@ -71,10 +71,10 @@
   enter G b
   print log enter B
   outcome G fired d-a
-= back fired d-a
-> send e3
-  post e3 0
-  event e3
+= BACK fired d-a
+> send E3
+  post E3 0
+  event E3
   fire G b-e
   exit G b
   print log exit B
@@ -83,6 +83,6 @@
   enter G e
   print log enter E
   outcome G fired b-e
-= e3 fired b-e
+= E3 fired b-e
 > states
 = e

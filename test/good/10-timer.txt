@@ -4,13 +4,13 @@
   enter G a
 > clock 50
 > tick
-> send show
-  post show 0
-  event show
+> send SHOW
+  post SHOW 0
+  event SHOW
   fire G a#6
   print log 50 50
   outcome G fired a#6
-= show fired a#6
+= SHOW fired a#6
 > clock 50
 > tick
   post t2.TIMEOUT 0 G
@@ -25,12 +25,12 @@
   outcome G fired a#2
 = t1.TIMEOUT fired a#1
 = t2.TIMEOUT fired a#2
-> send stop
-  post stop 0
-  event stop
+> send STOP
+  post STOP 0
+  event STOP
   fire G a#3
   outcome G fired a#3
-= stop fired a#3
+= STOP fired a#3
 > clock 100
 > tick
   post t2.TIMEOUT 0 G
@@ -39,33 +39,33 @@
   print log t2 100
   outcome G fired a#2
 = t2.TIMEOUT fired a#2
-> send show
-  post show 0
-  event show
+> send SHOW
+  post SHOW 0
+  event SHOW
   fire G a#6
   print log 100 100
   outcome G fired a#6
-= show fired a#6
-> send resume
-  post resume 0
-  event resume
+= SHOW fired a#6
+> send RESUME
+  post RESUME 0
+  event RESUME
   fire G a#4
   outcome G fired a#4
-= resume fired a#4
+= RESUME fired a#4
 > clock 50
-> send reset
-  post reset 0
-  event reset
+> send RESET
+  post RESET 0
+  event RESET
   fire G a#5
   outcome G fired a#5
-= reset fired a#5
-> send show
-  post show 0
-  event show
+= RESET fired a#5
+> send SHOW
+  post SHOW 0
+  event SHOW
   fire G a#6
   print log 50 100
   outcome G fired a#6
-= show fired a#6
+= SHOW fired a#6
 > clock 50
 > tick
   post t1.TIMEOUT 10 G

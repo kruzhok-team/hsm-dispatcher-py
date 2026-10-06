@@ -1,11 +1,11 @@
 # the parameters of an event, the priorities
 load 09-events.graphml
 start
-send add amount=5
-send add amount=-1
-send show
-post low
-post high priority=10 mark=first
-post higher priority=20
-post high priority=10 mark=second
+send ADD amount=5
+send ADD amount=-1
+send SHOW
+post LOW
+post HIGH priority=10 mark=first
+post HIGHER priority=20
+post HIGH priority=10 mark=second
 run

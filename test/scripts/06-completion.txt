@@ -2,10 +2,10 @@
 load 06-completion.graphml
 start
 states
-send done
+send DONE
 states
 finished
-send end
+send END
 finished
 states
-send done
+send DONE

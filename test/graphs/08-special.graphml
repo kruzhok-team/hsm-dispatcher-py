@@ -44,7 +44,7 @@
     <node id="a">
       <data key="dName">A</data>
       <data key="dData">UNKNOWN/
-log.print('unknown in A:', event.name)</data>
+log.print('UNKNOWN in A:', event.name)</data>
       <graph id="a:" edgedefault="directed">
         <data key="dRegion"/>
         <node id="ainit">
@@ -52,16 +52,16 @@ log.print('unknown in A:', event.name)</data>
         </node>
         <node id="b">
           <data key="dName">B</data>
-          <data key="dData">known/
-log.print('known in B')
+          <data key="dData">KNOWN/
+log.print('KNOWN in B')
 
 ANY/
-log.print('any in B:', event.name)</data>
+log.print('ANY in B:', event.name)</data>
         </node>
         <node id="b2">
           <data key="dName">B2</data>
           <data key="dData">ANY propagate/
-log.print('any in B2:', event.name)</data>
+log.print('ANY in B2:', event.name)</data>
         </node>
       </graph>
     </node>
@@ -76,10 +76,10 @@ log.print('exit C')</data>
     <edge id="init-a" source="init" target="a"/>
     <edge id="ainit-b" source="ainit" target="b"/>
     <edge id="a-c" source="a" target="c">
-      <data key="dData">out/</data>
+      <data key="dData">OUT/</data>
     </edge>
     <edge id="b-b2" source="b" target="b2">
-      <data key="dData">next/</data>
+      <data key="dData">NEXT/</data>
     </edge>
   </graph>
 </graphml>

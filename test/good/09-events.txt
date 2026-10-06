@@ -2,54 +2,54 @@
 > start
   fire G init-a
   enter G a
-> send add amount=5
-  post add 0
-  event add
+> send ADD amount=5
+  post ADD 0
+  event ADD
   guard G a#1 event.amount > 0 True
   fire G a#1
   outcome G fired a#1
-= add fired a#1
-> send add amount=-1
-  post add 0
-  event add
+= ADD fired a#1
+> send ADD amount=-1
+  post ADD 0
+  event ADD
   guard G a#1 event.amount > 0 False
   fire G a#2
   print log skip -1
   outcome G fired a#2
-= add fired a#2
-> send show
-  post show 0
-  event show
+= ADD fired a#2
+> send SHOW
+  post SHOW 0
+  event SHOW
   fire G a#3
-  print log show 5
+  print log SHOW 5
   outcome G fired a#3
-= show fired a#3
-> post low
-  post low 0
-> post high priority=10 mark=first
-  post high 10
-> post higher priority=20
-  post higher 20
-> post high priority=10 mark=second
-  post high 10
+= SHOW fired a#3
+> post LOW
+  post LOW 0
+> post HIGH priority=10 mark=first
+  post HIGH 10
+> post HIGHER priority=20
+  post HIGHER 20
+> post HIGH priority=10 mark=second
+  post HIGH 10
 > run
-  event higher
+  event HIGHER
   fire G a#6
-  print log higher
+  print log HIGHER
   outcome G fired a#6
-  event high
+  event HIGH
   fire G a#5
-  print log high first
+  print log HIGH first
   outcome G fired a#5
-  event high
+  event HIGH
   fire G a#5
-  print log high second
+  print log HIGH second
   outcome G fired a#5
-  event low
+  event LOW
   fire G a#4
-  print log low
+  print log LOW
   outcome G fired a#4
-= higher fired a#6
-= high fired a#5
-= high fired a#5
-= low fired a#4
+= HIGHER fired a#6
+= HIGH fired a#5
+= HIGH fired a#5
+= LOW fired a#4

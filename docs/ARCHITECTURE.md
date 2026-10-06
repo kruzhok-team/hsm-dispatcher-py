@@ -1,6 +1,6 @@
 # The Python HSM Dispatcher Architecture
 
-Document version: 0.4 (2026-10-04)
+Document version: 0.5 (2026-10-06)
 
 The dispatcher executes Hierarchical State Machine (HSM) diagrams at run
 time. The diagrams are stored in the CyberiadaML-GraphML format (CGML,
@@ -139,9 +139,15 @@ element is reached.
 An event has a name, optional named parameters and a priority. It comes
 from one of two sources:
 
-* the application: `post('start')`, `post('go', speed=5)`;
+* the application: `post('START')`, `post('GO', speed=5)`;
 * a component: the signal `TIMEOUT` of the component `timer1` is the event
   `timer1.TIMEOUT`.
+
+By convention the names of the events are written in capitals, with an
+underscore between the words (`GO`, `DOOR_OPENED`, `timer1.TIMEOUT`); the
+identifiers of the components, the methods and the variables are lowercase.
+The dispatcher compares the names as they are written and does not enforce
+the convention.
 
 All waiting events are in one queue. The next event to process is the one
 with the highest priority; among equal priorities, the one that arrived
@@ -162,9 +168,9 @@ another one.
 
 | Waiting, in the order of arrival | Priority | Processed |
 |---|---|---|
-| `sensor.changed` | 0 | third |
+| `sensor.CHANGED` | 0 | third |
 | `timer1.TIMEOUT` | 10 | first |
-| `alarm.raised` | 10 | second |
+| `alarm.RAISED` | 10 | second |
 
 The consequences of the priorities are a part of the rule:
 
@@ -224,10 +230,10 @@ enclosing state if that state is still active, with the same selection rule.
 Its guards are evaluated at that moment.
 
 ```
-A   go / -> D                        the enclosing state
-B   go propagate / n.add(1)          case 1: internal, inside A
-B   go propagate / -> C              case 2: C is inside A
-B   go propagate / -> E              case 3: E is outside A
+A   GO / -> D                        the enclosing state
+B   GO propagate / n.add(1)          case 1: internal, inside A
+B   GO propagate / -> C              case 2: C is inside A
+B   GO propagate / -> E              case 3: E is outside A
 ```
 
 | Case | Result |
@@ -257,11 +263,11 @@ evaluated as a Python expression. The names visible to the text:
 entry/
 timer1.start(1000)
 
-go [event.speed > 3] propagate/
+GO [event.speed > 3] propagate/
 counter.add(event.speed)
 
 ANY/
-log.write(event.name)
+log.print(event.name)
 ```
 
 The text is compiled when the document is loaded, so a syntax error is

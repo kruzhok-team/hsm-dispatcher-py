@@ -4,7 +4,7 @@ start
 states M1
 states M2
 # both machines react; the signal of the shared bus reaches both
-send go
+send GO
 clock 100
 # the timer of M1 only
 tick

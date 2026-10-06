@@ -67,16 +67,16 @@ log.print('t1')
 t2.TIMEOUT/
 log.print('t2', t2.difference)
 
-stop/
+STOP/
 t1.disable()
 
-resume/
+RESUME/
 t1.enable()
 
-reset/
+RESET/
 t2.reset()
 
-show/
+SHOW/
 log.print(t1.difference, t2.difference)</data>
     </node>
     <edge id="init-a" source="init" target="a"/>

@@ -3,19 +3,19 @@ load 10-timer.graphml
 start
 clock 50
 tick
-send show
+send SHOW
 clock 50
 # t2 raises first, t1 has the higher priority
 tick
-send stop
+send STOP
 clock 100
 tick
-send show
+send SHOW
 # enable starts the count again, reset too
-send resume
+send RESUME
 clock 50
-send reset
-send show
+send RESET
+send SHOW
 clock 50
 tick
 clock 50

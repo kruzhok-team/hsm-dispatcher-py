@@ -64,9 +64,9 @@ t.start(100)
 bus.ping('local')
 
 t.TIMEOUT/
-log.print('M1 timeout')
+log.print('M1 TIMEOUT')
 
-bus.ping/
+bus.PING/
 log.print('M1 bus', event.text)</data>
     </node>
     <edge id="init-a" source="init" target="a"/>
@@ -94,9 +94,9 @@ priority/ 7</data>
     <node id="x">
       <data key="dName">X</data>
       <data key="dData">t.TIMEOUT/
-log.print('M2 timeout')
+log.print('M2 TIMEOUT')
 
-bus.ping/
+bus.PING/
 log.print('M2 bus')</data>
     </node>
     <edge id="init2-x" source="init2" target="x"/>

@@ -6,9 +6,9 @@
   fire G pinit-a
   enter G a
   print log enter A
-> send go
-  post go 0
-  event go
+> send GO
+  post GO 0
+  event GO
   fire G a-b
   print log action
   exit G a
@@ -20,6 +20,6 @@
   enter G b
   print log enter B
   outcome G fired a-b
-= go fired a-b
+= GO fired a-b
 > states
 = q b

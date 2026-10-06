@@ -2,27 +2,27 @@
 > start
   fire G init-a
   enter G a
-> send inc
-  post inc 0
-  event inc
+> send INC
+  post INC 0
+  event INC
   fire G a#1
   outcome G fired a#1
-= inc fired a#1
+= INC fired a#1
 > clock 40
-> post inc
-  post inc 0
+> post INC
+  post INC 0
 > snapshot
-= {'version': 2, 'machines': {'G': {'active': 'a', 'finished': False, 'history': {}}}, 'queue': [{'name': 'inc', 'priority': 0, 'parameters': {}, 'machine': None}], 'completions': [], 'deferred': {'G': []}, 'components': {'shared': {}, 'local': {'G': {'log': None, 'n': 1, 't': {'interval': 100, 'enabled': True, 'remaining': 60}}}}}
+= {'version': 2, 'machines': {'G': {'active': 'a', 'finished': False, 'history': {}}}, 'queue': [{'name': 'INC', 'priority': 0, 'parameters': {}, 'machine': None}], 'completions': [], 'deferred': {'G': []}, 'components': {'shared': {}, 'local': {'G': {'log': None, 'n': 1, 't': {'interval': 100, 'enabled': True, 'remaining': 60}}}}}
 > load 12-snapshot.graphml
 > restore
-  post inc 0
+  post INC 0
 > states
 = a
 > run
-  event inc
+  event INC
   fire G a#1
   outcome G fired a#1
-= inc fired a#1
+= INC fired a#1
 > clock 59
 > tick
 > clock 1

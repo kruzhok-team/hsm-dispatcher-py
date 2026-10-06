@@ -3,13 +3,13 @@ load 08-special.graphml
 start
 triggers
 # the named trigger first
-send known
+send KNOWN
 # ANY of the inner state hides the handler of A
-send out
+send OUT
 states
 # not in the pool: UNKNOWN
-send strange
-send next
+send STRANGE
+send NEXT
 # ANY propagate: the handler of A fires too
-send out
+send OUT
 states

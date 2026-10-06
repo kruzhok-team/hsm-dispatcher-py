@@ -168,38 +168,38 @@ log.print('exit C2')</data>
     <edge id="init-p" source="init" target="p"/>
     <edge id="pinit-a" source="pinit" target="a"/>
     <edge id="a-b" source="a" target="b">
-      <data key="dData">next/</data>
+      <data key="dData">NEXT/</data>
     </edge>
     <edge id="b-pfin" source="b" target="pfin">
-      <data key="dData">fin/</data>
+      <data key="dData">FIN/</data>
     </edge>
     <edge id="h-a" source="h" target="a"/>
     <edge id="p-q" source="p" target="q">
-      <data key="dData">out/</data>
+      <data key="dData">OUT/</data>
     </edge>
     <edge id="q-h" source="q" target="h">
-      <data key="dData">back/</data>
+      <data key="dData">BACK/</data>
     </edge>
     <edge id="dinit-d1" source="dinit" target="d1"/>
     <edge id="d1init-x" source="d1init" target="x"/>
     <edge id="x-y" source="x" target="y">
-      <data key="dData">step/</data>
+      <data key="dData">STEP/</data>
     </edge>
     <edge id="d-q" source="d" target="q">
-      <data key="dData">out2/</data>
+      <data key="dData">OUT2/</data>
     </edge>
     <edge id="q-dh" source="q" target="dh">
-      <data key="dData">deep/</data>
+      <data key="dData">DEEP/</data>
     </edge>
     <edge id="p2init-c1" source="p2init" target="c1"/>
     <edge id="c1-c2" source="c1" target="c2">
-      <data key="dData">go2/</data>
+      <data key="dData">GO2/</data>
     </edge>
     <edge id="q-h2" source="q" target="h2">
-      <data key="dData">h2/</data>
+      <data key="dData">H2/</data>
     </edge>
     <edge id="p2-q" source="p2" target="q">
-      <data key="dData">out3/</data>
+      <data key="dData">OUT3/</data>
     </edge>
   </graph>
 </graphml>

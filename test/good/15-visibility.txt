@@ -2,23 +2,23 @@
 > start
   fire M1 init-a
   enter M1 a
-  post bus.ping 0 M1
+  post bus.PING 0 M1
   fire M2 init2-x
   enter M2 x
-  event bus.ping
+  event bus.PING
   fire M1 a#2
   print log M1 bus local
   outcome M1 fired a#2
-= bus.ping fired a#2
+= bus.PING fired a#2
 > clock 100
 > tick
   post t.TIMEOUT 7
   event t.TIMEOUT
   fire M1 a#1
-  print log M1 timeout
+  print log M1 TIMEOUT
   outcome M1 fired a#1
   fire M2 x#1
-  print log M2 timeout
+  print log M2 TIMEOUT
   outcome M2 fired x#1
 = t.TIMEOUT fired a#1 x#1
 > snapshot

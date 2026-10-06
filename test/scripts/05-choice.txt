@@ -1,13 +1,13 @@
 # the choice pseudostate
 load 05-choice.graphml
 start
-send go
-send back
-send inc
-send inc
-send go
-send back
+send GO
+send BACK
+send INC
+send INC
+send GO
+send BACK
 # no true branch
-error send bad
+error send BAD
 stopped
-error send go
+error send GO

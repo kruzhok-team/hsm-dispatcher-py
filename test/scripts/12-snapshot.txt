@@ -1,9 +1,9 @@
 # the snapshot and the continuation in a new dispatcher
 load 12-snapshot.graphml
 start
-send inc
+send INC
 clock 40
-post inc
+post INC
 snapshot
 load 12-snapshot.graphml
 restore

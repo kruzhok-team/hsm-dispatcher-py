@@ -1,5 +1,5 @@
 # the behaviour follows the exit actions
 load 03-order-exit.graphml
 start
-send go
+send GO
 states

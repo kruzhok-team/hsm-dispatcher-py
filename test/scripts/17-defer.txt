@@ -2,16 +2,16 @@
 load 17-defer.graphml
 start
 # deferred in A1 although A would handle them
-send e
-send f
+send E
+send F
 states
 # the state changes: the deferred events are offered again
-send go
-send e
-send next
-send e
+send GO
+send E
+send NEXT
+send E
 snapshot
 load 17-defer.graphml
 restore
-send next2
+send NEXT2
 states

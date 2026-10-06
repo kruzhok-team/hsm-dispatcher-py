@@ -48,7 +48,7 @@
     </node>
     <node id="a">
       <data key="dName">A</data>
-      <data key="dData">inc/
+      <data key="dData">INC/
 n.add(1)</data>
     </node>
     <node id="b">
@@ -59,25 +59,25 @@ n.add(1)</data>
     </node>
     <edge id="init-a" source="init" target="a"/>
     <edge id="a-b" source="a" target="b">
-      <data key="dData">go [n.value &gt; 2]/</data>
+      <data key="dData">GO [n.value &gt; 2]/</data>
     </edge>
     <edge id="a-c" source="a" target="c">
-      <data key="dData">go [n.value &gt; 1]/</data>
+      <data key="dData">GO [n.value &gt; 1]/</data>
     </edge>
     <edge id="a-b#2" source="a" target="b">
-      <data key="dData">try [n.value &gt; 5]/</data>
+      <data key="dData">TRY [n.value &gt; 5]/</data>
     </edge>
     <edge id="a-b#3" source="a" target="b">
-      <data key="dData">pick [n.value &gt; 0]/</data>
+      <data key="dData">PICK [n.value &gt; 0]/</data>
     </edge>
     <edge id="a-c#2" source="a" target="c">
-      <data key="dData">pick [else]/</data>
+      <data key="dData">PICK [else]/</data>
     </edge>
     <edge id="b-a" source="b" target="a">
-      <data key="dData">back/</data>
+      <data key="dData">BACK/</data>
     </edge>
     <edge id="c-a" source="c" target="a">
-      <data key="dData">back/</data>
+      <data key="dData">BACK/</data>
     </edge>
   </graph>
 </graphml>

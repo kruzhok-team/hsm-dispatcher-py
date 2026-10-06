@@ -2,85 +2,85 @@
 > start
   fire G init-a
   enter G a
-> send try
-  post try 0
-  event try
+> send TRY
+  post TRY 0
+  event TRY
   guard G a-b#2 n.value > 5 False
   outcome G rejected
-= try rejected
-> send pick
-  post pick 0
-  event pick
+= TRY rejected
+> send PICK
+  post PICK 0
+  event PICK
   guard G a-b#3 n.value > 0 False
   fire G a-c#2
   exit G a
   enter G c
   outcome G fired a-c#2
-= pick fired a-c#2
-> send back
-  post back 0
-  event back
+= PICK fired a-c#2
+> send BACK
+  post BACK 0
+  event BACK
   fire G c-a
   exit G c
   enter G a
   outcome G fired c-a
-= back fired c-a
-> send inc
-  post inc 0
-  event inc
+= BACK fired c-a
+> send INC
+  post INC 0
+  event INC
   fire G a#1
   outcome G fired a#1
-= inc fired a#1
-> send pick
-  post pick 0
-  event pick
+= INC fired a#1
+> send PICK
+  post PICK 0
+  event PICK
   guard G a-b#3 n.value > 0 True
   fire G a-b#3
   exit G a
   enter G b
   outcome G fired a-b#3
-= pick fired a-b#3
-> send back
-  post back 0
-  event back
+= PICK fired a-b#3
+> send BACK
+  post BACK 0
+  event BACK
   fire G b-a
   exit G b
   enter G a
   outcome G fired b-a
-= back fired b-a
-> send inc
-  post inc 0
-  event inc
+= BACK fired b-a
+> send INC
+  post INC 0
+  event INC
   fire G a#1
   outcome G fired a#1
-= inc fired a#1
-> send go
-  post go 0
-  event go
+= INC fired a#1
+> send GO
+  post GO 0
+  event GO
   guard G a-b n.value > 2 False
   guard G a-c n.value > 1 True
   fire G a-c
   exit G a
   enter G c
   outcome G fired a-c
-= go fired a-c
-> send back
-  post back 0
-  event back
+= GO fired a-c
+> send BACK
+  post BACK 0
+  event BACK
   fire G c-a
   exit G c
   enter G a
   outcome G fired c-a
-= back fired c-a
-> send inc
-  post inc 0
-  event inc
+= BACK fired c-a
+> send INC
+  post INC 0
+  event INC
   fire G a#1
   outcome G fired a#1
-= inc fired a#1
-> send go
-  post go 0
-  event go
+= INC fired a#1
+> send GO
+  post GO 0
+  event GO
   guard G a-b n.value > 2 True
   guard G a-c n.value > 1 True
   ambiguous G a-b a-c
@@ -88,6 +88,6 @@
   exit G a
   enter G b
   outcome G fired a-b
-= go fired a-b
+= GO fired a-b
 > states
 = b

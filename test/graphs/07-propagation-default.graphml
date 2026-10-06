@@ -63,11 +63,11 @@ log.print('enter B')
 exit/
 log.print('exit B')
 
-e1/
-log.print('e1 in B')
+E1/
+log.print('E1 in B')
 
-e2 block/
-log.print('e2 in B')</data>
+E2 block/
+log.print('E2 in B')</data>
         </node>
       </graph>
     </node>
@@ -82,13 +82,13 @@ log.print('exit D')</data>
     <edge id="init-a" source="init" target="a"/>
     <edge id="ainit-b" source="ainit" target="b"/>
     <edge id="a-d" source="a" target="d">
-      <data key="dData">e1/</data>
+      <data key="dData">E1/</data>
     </edge>
     <edge id="a-d#2" source="a" target="d">
-      <data key="dData">e2/</data>
+      <data key="dData">E2/</data>
     </edge>
     <edge id="d-a" source="d" target="a">
-      <data key="dData">back/</data>
+      <data key="dData">BACK/</data>
     </edge>
   </graph>
 </graphml>

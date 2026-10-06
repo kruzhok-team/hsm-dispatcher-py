@@ -92,7 +92,7 @@ log.print('a is complete')</data>
     </edge>
     <edge id="binit-b1" source="binit" target="b1"/>
     <edge id="b1-bfin" source="b1" target="bfin">
-      <data key="dData">done/</data>
+      <data key="dData">DONE/</data>
     </edge>
     <edge id="b-c" source="b" target="c">
       <data key="dData">/
@@ -102,7 +102,7 @@ log.print('b is complete')</data>
       <data key="dData">[1 &gt; 2]/</data>
     </edge>
     <edge id="c-fin" source="c" target="fin">
-      <data key="dData">end/</data>
+      <data key="dData">END/</data>
     </edge>
   </graph>
 </graphml>

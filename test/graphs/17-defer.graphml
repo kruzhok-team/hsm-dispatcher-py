@@ -43,11 +43,11 @@
     </node>
     <node id="a">
       <data key="dName">A</data>
-      <data key="dData">e/
-log.print('e handled in A')
+      <data key="dData">E/
+log.print('E handled in A')
 
-f/
-log.print('f handled in A')</data>
+F/
+log.print('F handled in A')</data>
       <graph id="a:" edgedefault="directed">
         <data key="dRegion"/>
         <node id="ainit">
@@ -55,18 +55,18 @@ log.print('f handled in A')</data>
         </node>
         <node id="a1">
           <data key="dName">A1</data>
-          <data key="dData">e/ defer
+          <data key="dData">E/ defer
 
-f/ defer</data>
+F/ defer</data>
         </node>
         <node id="a2">
           <data key="dName">A2</data>
-          <data key="dData">e/
-log.print('e handled in A2')</data>
+          <data key="dData">E/
+log.print('E handled in A2')</data>
         </node>
         <node id="a3">
           <data key="dName">A3</data>
-          <data key="dData">e/ defer</data>
+          <data key="dData">E/ defer</data>
         </node>
         <node id="a4">
           <data key="dName">A4</data>
@@ -76,13 +76,13 @@ log.print('e handled in A2')</data>
     <edge id="init-a" source="init" target="a"/>
     <edge id="ainit-a1" source="ainit" target="a1"/>
     <edge id="a1-a2" source="a1" target="a2">
-      <data key="dData">go/</data>
+      <data key="dData">GO/</data>
     </edge>
     <edge id="a2-a3" source="a2" target="a3">
-      <data key="dData">next/</data>
+      <data key="dData">NEXT/</data>
     </edge>
     <edge id="a3-a4" source="a3" target="a4">
-      <data key="dData">next2/</data>
+      <data key="dData">NEXT2/</data>
     </edge>
   </graph>
 </graphml>

@@ -5,12 +5,12 @@
   print log a 1 2.5 None
 > output
 | a 1 2.5 None
-> send say text="hello world"
-  post say 0
-  event say
+> send SAY text="hello world"
+  post SAY 0
+  event SAY
   fire G a#1
   print log hello world
   outcome G fired a#1
-= say fired a#1
+= SAY fired a#1
 > output
 | hello world

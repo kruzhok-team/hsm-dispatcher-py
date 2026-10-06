@@ -72,7 +72,7 @@ class Bus(hsmd.Component):
     shared = True
 
     def ping(self, text=''):
-        self.signal('ping', text=text)
+        self.signal('PING', text=text)
 
 
 hsmd.register('Counter', Counter)

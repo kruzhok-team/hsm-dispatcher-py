@@ -54,7 +54,7 @@ log.print('exit A')</data>
     </node>
     <edge id="init-a" source="init" target="a"/>
     <edge id="a-t" source="a" target="t">
-      <data key="dData">kill/
+      <data key="dData">KILL/
 log.print('bye')</data>
     </edge>
   </graph>

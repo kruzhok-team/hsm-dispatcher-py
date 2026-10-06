@@ -64,7 +64,7 @@ log.print('exit Step')</data>
     <edge id="winit-ws" source="winit" target="ws"/>
     <edge id="wen-ws" source="wen" target="ws"/>
     <edge id="ws-inner" source="ws" target="inner">
-      <data key="dData">go/</data>
+      <data key="dData">GO/</data>
     </edge>
     <edge id="inner-wex" source="inner" target="wex"/>
   </graph>
@@ -92,8 +92,8 @@ log.print('exit V1')</data>
     </node>
     <edge id="vinit-v1" source="vinit" target="v1"/>
     <edge id="v1-vfin" source="v1" target="vfin">
-      <data key="dData">fin/
-log.print('fin')</data>
+      <data key="dData">FIN/
+log.print('FIN')</data>
     </edge>
   </graph>
 </graphml>

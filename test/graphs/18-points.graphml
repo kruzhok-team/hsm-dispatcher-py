@@ -141,26 +141,26 @@ log.print('exit E1')</data>
     </node>
     <edge id="init-s" source="init" target="s"/>
     <edge id="s-cin" source="s" target="cin">
-      <data key="dData">go/</data>
+      <data key="dData">GO/</data>
     </edge>
     <edge id="cinit-c1" source="cinit" target="c1"/>
     <edge id="cin-c2" source="cin" target="c2"/>
     <edge id="c2-cout" source="c2" target="cout">
-      <data key="dData">done/
-log.print('done')</data>
+      <data key="dData">DONE/
+log.print('DONE')</data>
     </edge>
     <edge id="cout-d" source="cout" target="d"/>
     <edge id="d-w" source="d" target="w">
-      <data key="dData">tow/</data>
+      <data key="dData">TOW/</data>
     </edge>
     <edge id="winit-ea" source="winit" target="ea"/>
     <edge id="einit-e1" source="einit" target="e1"/>
     <edge id="e1-quit" source="e1" target="quit">
-      <data key="dData">leave/
-log.print('leave')</data>
+      <data key="dData">LEAVE/
+log.print('LEAVE')</data>
     </edge>
     <edge id="w-bye" source="w" target="bye">
-      <data key="dData">end/</data>
+      <data key="dData">END/</data>
     </edge>
   </graph>
 </graphml>

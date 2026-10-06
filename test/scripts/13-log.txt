@@ -2,5 +2,5 @@
 load 13-log.graphml
 start
 output
-send say text="hello world"
+send SAY text="hello world"
 output

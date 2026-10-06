@@ -91,7 +91,7 @@ log.print('exit B')</data>
     <edge id="pinit-a" source="pinit" target="a"/>
     <edge id="qinit-b" source="qinit" target="b"/>
     <edge id="a-b" source="a" target="b">
-      <data key="dData">go/
+      <data key="dData">GO/
 log.print('action')</data>
     </edge>
   </graph>

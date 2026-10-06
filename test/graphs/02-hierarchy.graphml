@@ -49,8 +49,8 @@ log.print('enter P')
 exit/
 log.print('exit P')
 
-ping/
-log.print('ping in P')</data>
+PING/
+log.print('PING in P')</data>
       <graph id="p:" edgedefault="directed">
         <data key="dRegion"/>
         <node id="pinit">
@@ -64,8 +64,8 @@ log.print('enter A')
 exit/
 log.print('exit A')
 
-ping/
-log.print('ping in A')</data>
+PING/
+log.print('PING in A')</data>
         </node>
         <node id="b">
           <data key="dName">B</data>
@@ -88,22 +88,22 @@ log.print('exit Q')</data>
     <edge id="init-p" source="init" target="p"/>
     <edge id="pinit-a" source="pinit" target="a"/>
     <edge id="a-b" source="a" target="b">
-      <data key="dData">next/</data>
+      <data key="dData">NEXT/</data>
     </edge>
     <edge id="p-q" source="p" target="q">
-      <data key="dData">leave/</data>
+      <data key="dData">LEAVE/</data>
     </edge>
     <edge id="p-a" source="p" target="a">
-      <data key="dData">home/</data>
+      <data key="dData">HOME/</data>
     </edge>
     <edge id="b-p" source="b" target="p">
-      <data key="dData">up/</data>
+      <data key="dData">UP/</data>
     </edge>
     <edge id="a-a" source="a" target="a">
-      <data key="dData">again/</data>
+      <data key="dData">AGAIN/</data>
     </edge>
     <edge id="q-b" source="q" target="b">
-      <data key="dData">deep/</data>
+      <data key="dData">DEEP/</data>
     </edge>
   </graph>
 </graphml>

@@ -13,10 +13,10 @@
 > states M2
 = m2s
 > triggers
-= finish abort
-> send finish
-  post finish 0
-  event finish
+= FINISH ABORT
+> send FINISH
+  post FINISH 0
+  event FINISH
   fire M1 sub/m2s-m2ex
   exit M1 sub/m2s
   print log leave run
@@ -30,7 +30,7 @@
   print log leave run
   finished M2
   outcome M2 fired m2s-m2ex
-= finish fired sub/m2s-m2ex sub::ex-after m2s-m2ex
+= FINISH fired sub/m2s-m2ex sub::ex-after m2s-m2ex
 > states
 = after
 > states M2
@@ -46,9 +46,9 @@
   print log enter Step
 > states
 = sub sub/ws
-> send go
-  post go 0
-  event go
+> send GO
+  post GO 0
+  event GO
   fire M1 sub/ws-inner
   exit M1 sub/ws
   print log exit Step
@@ -57,14 +57,14 @@
   enter M1 sub/inner/v1
   print log enter V1
   outcome M1 fired sub/ws-inner
-= go fired sub/ws-inner
+= GO fired sub/ws-inner
 > states
 = sub sub/inner sub/inner/v1
-> send fin
-  post fin 0
-  event fin
+> send FIN
+  post FIN 0
+  event FIN
   fire M1 sub/inner/v1-vfin
-  print log fin
+  print log FIN
   exit M1 sub/inner/v1
   print log exit V1
   completion M1 sub/inner
@@ -76,7 +76,7 @@
   enter M1 after
   print log enter After
   outcome M1 fired sub/inner-wex sub::ex-after
-= fin fired sub/inner/v1-vfin
+= FIN fired sub/inner/v1-vfin
 > states
 = after
 > error load 19-submachine-cycle.graphml

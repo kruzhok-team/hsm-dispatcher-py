@@ -3,20 +3,20 @@
   fire G init-a
   enter G a
   print log enter A
-> send kill
-  post kill 0
-  event kill
+> send KILL
+  post KILL 0
+  event KILL
   fire G a-t
   print log bye
   terminated G
   outcome G fired a-t
-= kill fired a-t
+= KILL fired a-t
 > finished
 = True
 > states
 =
-> send kill
-  post kill 0
-  event kill
+> send KILL
+  post KILL 0
+  event KILL
   outcome G dropped
-= kill dropped
+= KILL dropped

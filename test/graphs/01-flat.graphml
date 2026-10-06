@@ -65,14 +65,14 @@ log.print('exit B')</data>
 log.print('initial')</data>
     </edge>
     <edge id="a-b" source="a" target="b">
-      <data key="dData">go/
-log.print('go')</data>
+      <data key="dData">GO/
+log.print('GO')</data>
     </edge>
     <edge id="b-a" source="b" target="a">
-      <data key="dData">back/</data>
+      <data key="dData">BACK/</data>
     </edge>
     <edge id="b-fin" source="b" target="fin">
-      <data key="dData">stop/</data>
+      <data key="dData">STOP/</data>
     </edge>
   </graph>
 </graphml>

@@ -5,49 +5,49 @@
   fire G ainit-b
   enter G b
 > triggers
-= known ANY next UNKNOWN out
-> send known
-  post known 0
-  event known
+= KNOWN ANY NEXT UNKNOWN OUT
+> send KNOWN
+  post KNOWN 0
+  event KNOWN
   fire G b#1
-  print log known in B
+  print log KNOWN in B
   outcome G fired b#1
-= known fired b#1
-> send out
-  post out 0
-  event out
+= KNOWN fired b#1
+> send OUT
+  post OUT 0
+  event OUT
   fire G b#2
-  print log any in B: out
+  print log ANY in B: OUT
   outcome G fired b#2
-= out fired b#2
+= OUT fired b#2
 > states
 = a b
-> send strange
-  post strange 0
-  event strange
+> send STRANGE
+  post STRANGE 0
+  event STRANGE
   fire G a#1
-  print log unknown in A: strange
+  print log UNKNOWN in A: STRANGE
   outcome G fired a#1
-= strange fired a#1
-> send next
-  post next 0
-  event next
+= STRANGE fired a#1
+> send NEXT
+  post NEXT 0
+  event NEXT
   fire G b-b2
   exit G b
   enter G b2
   outcome G fired b-b2
-= next fired b-b2
-> send out
-  post out 0
-  event out
+= NEXT fired b-b2
+> send OUT
+  post OUT 0
+  event OUT
   fire G b2#1
-  print log any in B2: out
+  print log ANY in B2: OUT
   fire G a-c
   exit G b2
   exit G a
   enter G c
   print log enter C
   outcome G fired b2#1 a-c
-= out fired b2#1 a-c
+= OUT fired b2#1 a-c
 > states
 = c

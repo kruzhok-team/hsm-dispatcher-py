@@ -2,46 +2,46 @@
 > start
   fire G init-a
   enter G a
-> error send bad
-  post bad 0
-  event bad
+> error send BAD
+  post BAD 0
+  event BAD
   fire G a#1
   error machine 'G', state 'a', internal transition 1, line 1: AttributeError: 'Log' object has no attribute 'prnt'
 ! ActionError: machine 'G', state 'a', internal transition 1, line 1: AttributeError: 'Log' object has no attribute 'prnt'
 > stopped
 = True
-> error send go
+> error send GO
 ! StoppedError: the dispatcher is stopped
-> error post go
+> error post GO
 ! StoppedError: the dispatcher is stopped
 > load 14-errors.graphml
 > start
   fire G init-a
   enter G a
-> error send wrong
-  post wrong 0
-  event wrong
+> error send WRONG
+  post WRONG 0
+  event WRONG
   error machine 'G', state 'a', internal transition 2, guard, line 1: NameError: name 'nosuch' is not defined
 ! ActionError: machine 'G', state 'a', internal transition 2, guard, line 1: NameError: name 'nosuch' is not defined
 > load 14-errors.graphml
 > start
   fire G init-a
   enter G a
-> error send need
-  post need 0
-  event need
+> error send NEED
+  post NEED 0
+  event NEED
   fire G a#3
-  error machine 'G', state 'a', internal transition 3, line 1: AttributeError: the event 'need' has no parameter 'amount'
-! ActionError: machine 'G', state 'a', internal transition 3, line 1: AttributeError: the event 'need' has no parameter 'amount'
+  error machine 'G', state 'a', internal transition 3, line 1: AttributeError: the event 'NEED' has no parameter 'amount'
+! ActionError: machine 'G', state 'a', internal transition 3, line 1: AttributeError: the event 'NEED' has no parameter 'amount'
 > load 14-errors.graphml
 > start
   fire G init-a
   enter G a
 > snapshot
 = {'version': 2, 'machines': {'G': {'active': 'a', 'finished': False, 'history': {}}}, 'queue': [], 'completions': [], 'deferred': {'G': []}, 'components': {'shared': {}, 'local': {'G': {'log': None}}}}
-> error send go
-  post go 0
-  event go
+> error send GO
+  post GO 0
+  event GO
   fire G a-b
   exit G a
   enter G b
@@ -55,11 +55,11 @@
 = False
 > states
 = a
-> send nothing
-  post nothing 0
-  event nothing
+> send NOTHING
+  post NOTHING 0
+  event NOTHING
   outcome G dropped
-= nothing dropped
+= NOTHING dropped
 > error load 14-errors-type.graphml
 ! DocumentError: machine 'G', component 'x': unknown type 'Nosuch'
 > error load 14-errors-syntax.graphml

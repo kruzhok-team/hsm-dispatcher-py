@@ -93,7 +93,7 @@ log.print('leave run')</data>
     <edge id="m2init-m2s" source="m2init" target="m2s"/>
     <edge id="m2en-m2s" source="m2en" target="m2s"/>
     <edge id="m2s-m2ex" source="m2s" target="m2ex">
-      <data key="dData">finish/
+      <data key="dData">FINISH/
 n.add(1)
 k.add(10)</data>
     </edge>

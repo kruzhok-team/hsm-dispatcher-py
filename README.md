@@ -30,7 +30,7 @@ hsmd.register('Lamp', Lamp)
 
 dispatcher = hsmd.Dispatcher('blinker.graphml')
 dispatcher.start()
-outcome = dispatcher.send('button.pressed', long=True)
+outcome = dispatcher.send('button.PRESSED', long=True)
 print(outcome.status, dispatcher.states())
 dispatcher.tick()                    # call it regularly: the timers
 ```

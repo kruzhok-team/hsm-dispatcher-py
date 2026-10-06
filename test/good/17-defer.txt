@@ -4,72 +4,72 @@
   enter G a
   fire G ainit-a1
   enter G a1
-> send e
-  post e 0
-  event e
+> send E
+  post E 0
+  event E
   defer G a1#1
   outcome G deferred
-= e deferred
-> send f
-  post f 0
-  event f
+= E deferred
+> send F
+  post F 0
+  event F
   defer G a1#2
   outcome G deferred
-= f deferred
+= F deferred
 > states
 = a a1
-> send go
-  post go 0
-  event go
+> send GO
+  post GO 0
+  event GO
   fire G a1-a2
   exit G a1
   enter G a2
   outcome G fired a1-a2
-  event e
+  event E
   fire G a2#1
-  print log e handled in A2
+  print log E handled in A2
   outcome G fired a2#1
-  event f
+  event F
   fire G a#2
-  print log f handled in A
+  print log F handled in A
   outcome G fired a#2
-= go fired a1-a2
-> send e
-  post e 0
-  event e
+= GO fired a1-a2
+> send E
+  post E 0
+  event E
   fire G a2#1
-  print log e handled in A2
+  print log E handled in A2
   outcome G fired a2#1
-= e fired a2#1
-> send next
-  post next 0
-  event next
+= E fired a2#1
+> send NEXT
+  post NEXT 0
+  event NEXT
   fire G a2-a3
   exit G a2
   enter G a3
   outcome G fired a2-a3
-= next fired a2-a3
-> send e
-  post e 0
-  event e
+= NEXT fired a2-a3
+> send E
+  post E 0
+  event E
   defer G a3#1
   outcome G deferred
-= e deferred
+= E deferred
 > snapshot
-= {'version': 2, 'machines': {'G': {'active': 'a3', 'finished': False, 'history': {'a': ['a2', 'a2']}}}, 'queue': [], 'completions': [], 'deferred': {'G': [{'name': 'e', 'priority': 0, 'parameters': {}, 'machine': None}]}, 'components': {'shared': {}, 'local': {'G': {'log': None}}}}
+= {'version': 2, 'machines': {'G': {'active': 'a3', 'finished': False, 'history': {'a': ['a2', 'a2']}}}, 'queue': [], 'completions': [], 'deferred': {'G': [{'name': 'E', 'priority': 0, 'parameters': {}, 'machine': None}]}, 'components': {'shared': {}, 'local': {'G': {'log': None}}}}
 > load 17-defer.graphml
 > restore
-> send next2
-  post next2 0
-  event next2
+> send NEXT2
+  post NEXT2 0
+  event NEXT2
   fire G a3-a4
   exit G a3
   enter G a4
   outcome G fired a3-a4
-  event e
+  event E
   fire G a#1
-  print log e handled in A
+  print log E handled in A
   outcome G fired a#1
-= next2 fired a3-a4
+= NEXT2 fired a3-a4
 > states
 = a a4

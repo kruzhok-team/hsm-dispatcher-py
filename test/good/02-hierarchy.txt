@@ -9,64 +9,64 @@
 > states
 = p a
 > triggers
-= ping next again leave home
-> send ping
-  post ping 0
-  event ping
+= PING NEXT AGAIN LEAVE HOME
+> send PING
+  post PING 0
+  event PING
   fire G a#1
-  print log ping in A
+  print log PING in A
   outcome G fired a#1
-= ping fired a#1
-> send next
-  post next 0
-  event next
+= PING fired a#1
+> send NEXT
+  post NEXT 0
+  event NEXT
   fire G a-b
   exit G a
   print log exit A
   enter G b
   print log enter B
   outcome G fired a-b
-= next fired a-b
-> send ping
-  post ping 0
-  event ping
+= NEXT fired a-b
+> send PING
+  post PING 0
+  event PING
   fire G p#1
-  print log ping in P
+  print log PING in P
   outcome G fired p#1
-= ping fired p#1
-> send home
-  post home 0
-  event home
+= PING fired p#1
+> send HOME
+  post HOME 0
+  event HOME
   fire G p-a
   exit G b
   print log exit B
   enter G a
   print log enter A
   outcome G fired p-a
-= home fired p-a
-> send again
-  post again 0
-  event again
+= HOME fired p-a
+> send AGAIN
+  post AGAIN 0
+  event AGAIN
   fire G a-a
   exit G a
   print log exit A
   enter G a
   print log enter A
   outcome G fired a-a
-= again fired a-a
-> send next
-  post next 0
-  event next
+= AGAIN fired a-a
+> send NEXT
+  post NEXT 0
+  event NEXT
   fire G a-b
   exit G a
   print log exit A
   enter G b
   print log enter B
   outcome G fired a-b
-= next fired a-b
-> send up
-  post up 0
-  event up
+= NEXT fired a-b
+> send UP
+  post UP 0
+  event UP
   fire G b-p
   exit G b
   print log exit B
@@ -74,10 +74,10 @@
   enter G a
   print log enter A
   outcome G fired b-p
-= up fired b-p
-> send leave
-  post leave 0
-  event leave
+= UP fired b-p
+> send LEAVE
+  post LEAVE 0
+  event LEAVE
   fire G p-q
   exit G a
   print log exit A
@@ -86,10 +86,10 @@
   enter G q
   print log enter Q
   outcome G fired p-q
-= leave fired p-q
-> send deep
-  post deep 0
-  event deep
+= LEAVE fired p-q
+> send DEEP
+  post DEEP 0
+  event DEEP
   fire G q-b
   exit G q
   print log exit Q
@@ -98,6 +98,6 @@
   enter G b
   print log enter B
   outcome G fired q-b
-= deep fired q-b
+= DEEP fired q-b
 > states
 = p b

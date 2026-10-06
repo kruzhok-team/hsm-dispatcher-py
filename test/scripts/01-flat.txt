@@ -3,10 +3,10 @@ load 01-flat.graphml
 start
 states
 triggers
-send go
-send nothing
-send back
-send go
-send stop
+send GO
+send NOTHING
+send BACK
+send GO
+send STOP
 finished
-send go
+send GO

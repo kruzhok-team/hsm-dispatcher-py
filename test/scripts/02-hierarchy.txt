@@ -4,19 +4,19 @@ start
 states
 triggers
 # the inner state handles the event first
-send ping
-send next
+send PING
+send NEXT
 # B has no handler: the enclosing state handles it
-send ping
+send PING
 # composite to its substate: P is not left
-send home
+send HOME
 # a state to itself: left and entered
-send again
-send next
+send AGAIN
+send NEXT
 # substate to its composite: P is not left, the default entry
-send up
+send UP
 # from the composite: the inner state is left first
-send leave
+send LEAVE
 # into a nested state: P is entered, the initial pseudostate is not used
-send deep
+send DEEP
 states

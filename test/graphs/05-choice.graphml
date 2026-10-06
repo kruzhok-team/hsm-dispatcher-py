@@ -54,7 +54,7 @@ log.print('enter A')
 exit/
 log.print('exit A')
 
-inc/
+INC/
 n.add(1)</data>
     </node>
     <node id="ch">
@@ -81,7 +81,7 @@ log.print('exit C')</data>
     </node>
     <edge id="init-a" source="init" target="a"/>
     <edge id="a-ch" source="a" target="ch">
-      <data key="dData">go/
+      <data key="dData">GO/
 log.print('first')</data>
     </edge>
     <edge id="ch-b" source="ch" target="b">
@@ -92,16 +92,16 @@ log.print('second')</data>
       <data key="dData">[else]/</data>
     </edge>
     <edge id="a-ch2" source="a" target="ch2">
-      <data key="dData">bad/</data>
+      <data key="dData">BAD/</data>
     </edge>
     <edge id="ch2-b" source="ch2" target="b">
       <data key="dData">[n.value &gt; 100]/</data>
     </edge>
     <edge id="b-a" source="b" target="a">
-      <data key="dData">back/</data>
+      <data key="dData">BACK/</data>
     </edge>
     <edge id="c-a" source="c" target="a">
-      <data key="dData">back/</data>
+      <data key="dData">BACK/</data>
     </edge>
   </graph>
 </graphml>

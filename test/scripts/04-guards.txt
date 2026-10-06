@@ -2,18 +2,18 @@
 load 04-guards.graphml
 start
 # the guard is false: rejected
-send try
+send TRY
 # no guard is true: [else]
-send pick
-send back
-send inc
-send pick
-send back
-send inc
+send PICK
+send BACK
+send INC
+send PICK
+send BACK
+send INC
 # one of two guards is true
-send go
-send back
-send inc
+send GO
+send BACK
+send INC
 # both guards are true: the first one, the ambiguity is reported
-send go
+send GO
 states

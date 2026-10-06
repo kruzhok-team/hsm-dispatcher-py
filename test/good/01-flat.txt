@@ -7,57 +7,57 @@
 > states
 = a
 > triggers
-= go
-> send go
-  post go 0
-  event go
+= GO
+> send GO
+  post GO 0
+  event GO
   fire G a-b
-  print log go
+  print log GO
   exit G a
   print log exit A
   enter G b
   print log enter B
   outcome G fired a-b
-= go fired a-b
-> send nothing
-  post nothing 0
-  event nothing
+= GO fired a-b
+> send NOTHING
+  post NOTHING 0
+  event NOTHING
   outcome G dropped
-= nothing dropped
-> send back
-  post back 0
-  event back
+= NOTHING dropped
+> send BACK
+  post BACK 0
+  event BACK
   fire G b-a
   exit G b
   print log exit B
   enter G a
   print log enter A
   outcome G fired b-a
-= back fired b-a
-> send go
-  post go 0
-  event go
+= BACK fired b-a
+> send GO
+  post GO 0
+  event GO
   fire G a-b
-  print log go
+  print log GO
   exit G a
   print log exit A
   enter G b
   print log enter B
   outcome G fired a-b
-= go fired a-b
-> send stop
-  post stop 0
-  event stop
+= GO fired a-b
+> send STOP
+  post STOP 0
+  event STOP
   fire G b-fin
   exit G b
   print log exit B
   finished G
   outcome G fired b-fin
-= stop fired b-fin
+= STOP fired b-fin
 > finished
 = True
-> send go
-  post go 0
-  event go
+> send GO
+  post GO 0
+  event GO
   outcome G dropped
-= go dropped
+= GO dropped

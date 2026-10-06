@@ -79,8 +79,8 @@ log.print('exit Stuck')</data>
     <edge id="init-sub::en" source="init" target="sub::en"/>
     <edge id="sub::ex-after" source="sub::ex" target="after"/>
     <edge id="sub-stuck" source="sub" target="stuck">
-      <data key="dData">abort/
-log.print('abort')</data>
+      <data key="dData">ABORT/
+log.print('ABORT')</data>
     </edge>
   </graph>
   <graph id="M2" edgedefault="directed">
@@ -123,7 +123,7 @@ log.print('leave run')</data>
     <edge id="m2init-m2s" source="m2init" target="m2s"/>
     <edge id="m2en-m2s" source="m2en" target="m2s"/>
     <edge id="m2s-m2ex" source="m2s" target="m2ex">
-      <data key="dData">finish/
+      <data key="dData">FINISH/
 n.add(1)
 k.add(10)</data>
     </edge>
