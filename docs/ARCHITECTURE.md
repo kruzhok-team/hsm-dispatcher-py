@@ -319,6 +319,13 @@ The declarations of a shared component must be identical apart from
 error, and so is an identifier that is local in one machine and shared in
 another.
 
+A declaration carries two identifiers with different scopes. The component
+identifier after `CGML_COMPONENT` is unique in its state machine, so several
+machines may declare the same component (PNST 1044, 10.3.1 and 10.3.2). The
+`id` of the comment node is a GraphML identifier and is unique in the whole
+document like every other node (PNST 1044, 5.9): the two declarations of
+`timer1` are two nodes, for example `m1_timer1` and `m2_timer1`.
+
 The signals, methods and variables of a type can be exported as a platform
 description in the form used by the Cyberiada editors, so the calls can be
 shown as pictograms.
@@ -559,8 +566,4 @@ external documents of the submachine tests.
 
 * the execution of `do/`: a synchronous call or an activity with a
   completion event (stage 3);
-* the form of the exported platform description;
-* the validator of `cyberiadaml-compat-tests` requires a component
-  identifier unique in the document (CGML-10.3-1); the dispatcher reads
-  PNST 1044, 10.3.2 per machine, and the test runner ignores that rule
-  until the validator follows.
+* the form of the exported platform description.
