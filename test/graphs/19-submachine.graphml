@@ -86,12 +86,12 @@ log.print('ABORT')</data>
   <graph id="M2" edgedefault="directed">
     <data key="dStateMachine"/>
     <data key="dName">Worker</data>
-    <node id="c_log">
+    <node id="m2_c_log">
       <data key="dNote">formal</data>
       <data key="dName">CGML_COMPONENT log</data>
       <data key="dData">type/ Log</data>
     </node>
-    <node id="c_n">
+    <node id="m2_c_n">
       <data key="dNote">formal</data>
       <data key="dName">CGML_COMPONENT n</data>
       <data key="dData">type/ Counter</data>

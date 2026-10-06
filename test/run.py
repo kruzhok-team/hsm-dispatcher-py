@@ -42,9 +42,9 @@ GOOD_DIR = os.path.join(TEST_DIR, 'good')
 VALIDATOR_DIR = os.path.join(TEST_DIR, '..', '..', 'cyberiadaml-compat-tests')
 
 MS_IN_SECOND = 1000
-# the validator still requires a component identifier unique in the whole
-# document; the dispatcher reads PNST 1044, 10.3.2 per machine
-IGNORED_RULES = ('CGML-10.3-1',)
+# the diagrams that break the standard on purpose, each loaded with `error
+# load` in a scenario: the file and the requirement the validator names
+EXPECTED_FINDINGS = {'19-submachine-point.graphml': ('CGML-8.1-4',)}
 ERROR_COMMAND = 'error'
 COMMENT = '#'
 
@@ -190,8 +190,9 @@ def validate_graphs():
         return False
     bad = 0
     for report in reports:
+        expected = EXPECTED_FINDINGS.get(os.path.basename(report['file']), ())
         findings = [f for f in report['findings']
-                    if f['severity'] == 'ERROR' and f['req'] not in IGNORED_RULES]
+                    if f['severity'] == 'ERROR' and f['req'] not in expected]
         for finding in findings:
             print('{}:{}: {} {}'.format(os.path.basename(report['file']), finding['line'],
                                         finding['req'], finding['message']))

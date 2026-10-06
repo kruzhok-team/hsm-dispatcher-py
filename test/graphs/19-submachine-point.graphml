@@ -56,7 +56,7 @@
   <graph id="M2" edgedefault="directed">
     <data key="dStateMachine"/>
     <data key="dName">Worker</data>
-    <node id="c_log">
+    <node id="m2_c_log">
       <data key="dNote">formal</data>
       <data key="dName">CGML_COMPONENT log</data>
       <data key="dData">type/ Log</data>

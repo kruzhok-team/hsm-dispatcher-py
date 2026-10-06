@@ -74,17 +74,17 @@ bus.ping('from M1')</data>
   <graph id="M2" edgedefault="directed">
     <data key="dStateMachine"/>
     <data key="dName">Second</data>
-    <node id="c_log">
+    <node id="m2_c_log">
       <data key="dNote">formal</data>
       <data key="dName">CGML_COMPONENT log</data>
       <data key="dData">type/ Log</data>
     </node>
-    <node id="c_timer1">
+    <node id="m2_c_timer1">
       <data key="dNote">formal</data>
       <data key="dName">CGML_COMPONENT timer1</data>
       <data key="dData">type/ Timer</data>
     </node>
-    <node id="c_bus">
+    <node id="m2_c_bus">
       <data key="dNote">formal</data>
       <data key="dName">CGML_COMPONENT bus</data>
       <data key="dData">type/ Bus</data>

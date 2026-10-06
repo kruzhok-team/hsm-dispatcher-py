@@ -49,7 +49,7 @@
   <graph id="M2" edgedefault="directed">
     <data key="dStateMachine"/>
     <data key="dName">Second</data>
-    <node id="c_x">
+    <node id="m2_c_x">
       <data key="dNote">formal</data>
       <data key="dName">CGML_COMPONENT x</data>
       <data key="dData">type/ Counter

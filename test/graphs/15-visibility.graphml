@@ -74,12 +74,12 @@ log.print('M1 bus', event.text)</data>
   <graph id="M2" edgedefault="directed">
     <data key="dStateMachine"/>
     <data key="dName">Second</data>
-    <node id="c_log">
+    <node id="m2_c_log">
       <data key="dNote">formal</data>
       <data key="dName">CGML_COMPONENT log</data>
       <data key="dData">type/ Log</data>
     </node>
-    <node id="c_t">
+    <node id="m2_c_t">
       <data key="dNote">formal</data>
       <data key="dName">CGML_COMPONENT t</data>
       <data key="dData">type/ Timer

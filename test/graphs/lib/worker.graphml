@@ -71,7 +71,7 @@ log.print('exit Step')</data>
   <graph id="V" edgedefault="directed">
     <data key="dStateMachine"/>
     <data key="dName">Leaf</data>
-    <node id="c_log">
+    <node id="v_c_log">
       <data key="dNote">formal</data>
       <data key="dName">CGML_COMPONENT log</data>
       <data key="dData">type/ Log</data>
