@@ -1,0 +1,5 @@
+# the formal comments the dispatcher does not interpret are kept for the application
+load 21-comments.graphml
+start
+comments
+states

@@ -1,0 +1,12 @@
+> load 21-comments.graphml
+> start
+  fire G init-a
+  enter G a
+  print log enter A
+  fire G ainit-b
+  enter G b
+> comments
+= PROMPT write: 'Write the file.\nThen signal DONE.'
+= SETTING inner: 'value/ 1'
+> states
+= a b

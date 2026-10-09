@@ -124,7 +124,10 @@ state and `get_transitions()` of a machine. For every machine it builds:
   and the target;
 * the pool of the trigger names;
 * the component declarations: the identifier, the type, the priority, the
-  visibility and the other parameters of each `CGML_COMPONENT <id>` comment.
+  visibility and the other parameters of each `CGML_COMPONENT <id>` comment;
+* the other formal comments, name and body, kept for the application
+  (prompts, settings); `CGML_META` is the document's, informal comments are
+  not read.
 
 The binding leaves two things to the caller, and the reader resolves them:
 the meta defaults (`actionFirst`, `block`) and the parameters in the body of
@@ -512,6 +515,8 @@ natural moment is after `run()`, when the queue is empty.
   state;
 * `triggers(machine=None)` - the trigger names of the transitions that can
   be selected in the current configuration, the guards not evaluated;
+* `comments(machine=None)` - the formal comments the dispatcher does not
+  interpret, as `(name, body)` pairs in the document order;
 * `snapshot()`, `restore(data)`;
 * `stopped` - set after an error.
 

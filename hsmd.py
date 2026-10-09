@@ -207,6 +207,11 @@ class Dispatcher:
     def triggers(self, machine=None):
         return self._run(machine).triggers()
 
+    def comments(self, machine=None):
+        """The formal comments the dispatcher does not interpret, as
+        (name, body) pairs in the document order."""
+        return list(self._run(machine).machine.comments)
+
     def snapshot(self):
         return {
             'version': SNAPSHOT_VERSION,

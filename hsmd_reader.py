@@ -61,6 +61,7 @@ ACTION_FIRST = 'actionFirst'
 EXIT_FIRST = 'exitFirst'
 
 COMPONENT_PREFIX = 'CGML_COMPONENT '
+META_NAME = 'CGML_META'
 PARAMETER_SEPARATOR = '/'
 PARAMETER_TYPE = 'type'
 PARAMETER_PRIORITY = 'priority'
@@ -176,6 +177,7 @@ class Machine:
         self.transition_order = ACTION_FIRST
         self.propagate = False
         self.components = []
+        self.comments = []           # the other formal comments: (name, body)
         self.pool = set()
 
     def where(self):
@@ -296,9 +298,13 @@ def _add_vertex(vertex, parent, machine):
 def _read_vertex(element, parent, machine):
     etype = element.get_type()
     if etype in _IGNORED:
-        if (etype == CyberiadaML.elementFormalComment and
-                element.get_name().startswith(COMPONENT_PREFIX)):
-            _read_component(element, machine)
+        if etype == CyberiadaML.elementFormalComment:
+            name = element.get_name()
+            if name.startswith(COMPONENT_PREFIX):
+                _read_component(element, machine)
+            elif name != META_NAME:
+                # kept for the application: prompts, settings, anything
+                machine.comments.append((name, element.get_body()))
         return
     if etype not in _KINDS:
         raise DocumentError("{}, element '{}': unknown element type".format(

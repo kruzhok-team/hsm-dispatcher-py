@@ -136,6 +136,9 @@ class Scenario:
             self.write('= ' + ' '.join(dispatcher.triggers(*args)))
         elif name == 'finished':
             self.write('= ' + str(dispatcher.finished(*args)))
+        elif name == 'comments':
+            for comment, body in dispatcher.comments(*args):
+                self.write('= {}: {!r}'.format(comment, body))
         elif name == 'stopped':
             self.write('= ' + str(dispatcher.stopped))
         elif name == 'snapshot':
