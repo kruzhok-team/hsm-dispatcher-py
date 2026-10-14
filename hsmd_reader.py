@@ -178,6 +178,7 @@ class Machine:
         self.propagate = False
         self.components = []
         self.comments = []           # the other formal comments: (name, body)
+        self.informal = []           # the informal comments: the bodies
         self.pool = set()
 
     def where(self):
@@ -305,6 +306,8 @@ def _read_vertex(element, parent, machine):
             elif name != META_NAME:
                 # kept for the application: prompts, settings, anything
                 machine.comments.append((name, element.get_body()))
+        elif etype == CyberiadaML.elementComment:
+            machine.informal.append(element.get_body())
         return
     if etype not in _KINDS:
         raise DocumentError("{}, element '{}': unknown element type".format(

@@ -1,0 +1,10 @@
+# the namespace of the application: its names in the text, its comments
+let foo 5
+let spam 2
+load 23-namespace.graphml
+comments informal
+comments all
+start
+send INC
+send GO
+states

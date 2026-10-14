@@ -86,7 +86,8 @@ class Outcome:
 
 class Dispatcher:
 
-    def __init__(self, path, clock=None, trace=None, output=None):
+    def __init__(self, path, clock=None, trace=None, output=None, machines=None,
+                 namespace=None):
         self.clock = clock if clock is not None else time.monotonic
         self.output = output if output is not None else sys.stderr
         self.stopped = False
@@ -100,16 +101,28 @@ class Dispatcher:
         self._shared = {}                      # id -> component
         self._declarations = {}                # id -> the first shared declaration
         self._local = {}                       # machine id -> id -> component
-        machines = hsmd_reader.load(path)
-        for machine in machines:
+        self._machines = hsmd_reader.load(path)
+        for machine in self._selected(machines):
             self._local[machine.id] = {}
             self._deferred[machine.id] = []
-            namespace = self._create_components(machine)
-            self._runs.append(MachineRun(machine, namespace, self))
+            names = namespace if namespace is not None else {}
+            self._create_components(machine, names)
+            self._runs.append(MachineRun(machine, names, self))
         self._check_identifiers()
 
-    def _create_components(self, machine):
-        namespace = {}
+    def _selected(self, machines):
+        """The machines to run: the named ones, or all of them."""
+        if machines is None:
+            return list(self._machines)
+        selected = []
+        for name in machines:
+            found = [m for m in self._machines if name in (m.id, m.name)]
+            if not found:
+                raise DocumentError("no machine '{}'".format(name))
+            selected.append(found[0])
+        return selected
+
+    def _create_components(self, machine, namespace):
         for declaration in machine.components:
             where = "{}, component '{}'".format(machine.where(), declaration.id)
             cls = hsmd_components.find(declaration.type)
@@ -117,6 +130,12 @@ class Dispatcher:
                 raise DocumentError("{}: unknown type '{}'".format(where, declaration.type))
             if declaration.id == EVENT_NAME:
                 raise DocumentError("{}: the name is reserved".format(where))
+            if isinstance(namespace.get(declaration.id), Component):
+                # another started machine put its component under this name
+                owner = namespace[declaration.id]
+                if owner is not self._shared.get(declaration.id):
+                    raise DocumentError("{}: the name is taken by the component of the "
+                                        "machine '{}'".format(where, owner.machine))
             shared = declaration.shared if declaration.shared is not None else cls.shared
             if shared and declaration.id in self._shared:
                 first = self._declarations[declaration.id]
@@ -139,7 +158,6 @@ class Dispatcher:
                 component.machine = machine.id
                 self._local[machine.id][declaration.id] = component
             namespace[declaration.id] = component
-        return namespace
 
     def _check_identifiers(self):
         for mid, components in self._local.items():
@@ -207,10 +225,16 @@ class Dispatcher:
     def triggers(self, machine=None):
         return self._run(machine).triggers()
 
-    def comments(self, machine=None):
-        """The formal comments the dispatcher does not interpret, as
-        (name, body) pairs in the document order."""
-        return list(self._run(machine).machine.comments)
+    def comments(self, machine=None, formal=True):
+        """The comments the dispatcher does not interpret, as (name, body)
+        pairs in the document order: the formal ones, the informal ones
+        (formal=False, the name is empty) or both (formal=None)."""
+        machine = self._run(machine).machine
+        if formal is None:
+            return list(machine.comments) + [('', body) for body in machine.informal]
+        if formal:
+            return list(machine.comments)
+        return [('', body) for body in machine.informal]
 
     def snapshot(self):
         return {

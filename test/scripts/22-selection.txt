@@ -1,0 +1,8 @@
+# the machines to run: the named one only
+load 11-machines.graphml machines=M1
+start
+states M1
+error states M2
+send GO
+clock 150
+tick

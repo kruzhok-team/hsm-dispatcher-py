@@ -1,0 +1,30 @@
+> load 11-machines.graphml machines=M1
+> start
+  fire M1 init-a
+  enter M1 a
+> states M1
+= a
+> error states M2
+! DispatcherError: no machine 'M2'
+> send GO
+  post GO 0
+  event GO
+  fire M1 a-b
+  print log GO in M1
+  post bus.PING 0
+  exit M1 a
+  enter M1 b
+  outcome M1 fired a-b
+  event bus.PING
+  fire M1 b#2
+  print log M1 sees from M1
+  outcome M1 fired b#2
+= GO fired a-b
+> clock 150
+> tick
+  post timer1.TIMEOUT 0 M1
+  event timer1.TIMEOUT
+  fire M1 b#1
+  print log TIMEOUT in M1
+  outcome M1 fired b#1
+= timer1.TIMEOUT fired b#1

@@ -94,6 +94,7 @@ class Scenario:
         self.stream = io.StringIO()
         self.dispatcher = None
         self.saved = None
+        self.names = {}          # the namespace given to the next dispatcher
 
     def write(self, text):
         self.lines.append(text.rstrip())
@@ -113,8 +114,15 @@ class Scenario:
         name, args = words[0], words[1:]
         dispatcher = self.dispatcher
         if name == 'load':
+            options = dict(arg.split('=', 1) for arg in args[1:])
+            machines = options['machines'].split(',') if 'machines' in options else None
             self.dispatcher = hsmd.Dispatcher(args[0], clock=lambda: self.now / MS_IN_SECOND,
-                                              trace=self.trace, output=self.stream)
+                                              trace=self.trace, output=self.stream,
+                                              machines=machines,
+                                              namespace=self.names or None)
+            self.names = {}
+        elif name == 'let':
+            self.names[args[0]] = parse_value(args[1])
         elif name == 'start':
             self.outcomes(dispatcher.start())
         elif name in ('post', 'send'):
@@ -137,7 +145,10 @@ class Scenario:
         elif name == 'finished':
             self.write('= ' + str(dispatcher.finished(*args)))
         elif name == 'comments':
-            for comment, body in dispatcher.comments(*args):
+            kinds = {'formal': True, 'informal': False, 'all': None}
+            kind = kinds[args[-1]] if args and args[-1] in kinds else True
+            machine = args[0] if args and args[0] not in kinds else None
+            for comment, body in dispatcher.comments(machine, kind):
                 self.write('= {}: {!r}'.format(comment, body))
         elif name == 'stopped':
             self.write('= ' + str(dispatcher.stopped))
