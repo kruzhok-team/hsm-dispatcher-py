@@ -17,6 +17,35 @@ The documentation is located in the `docs` directory and contains:
   references to the standards PNST 984-2024 and PNST 1044-2025, the core
   specifications of the dispatcher
 
+## Installation
+
+The dispatcher needs the `CyberiadaML` module of `libcyberiadamlpp-py` with
+its libraries (`libhtreegeom`, `libcyberiadaml`, `libcyberiadamlpp`), each
+installed by its own README; check it with `python3 -c "import CyberiadaML"`.
+
+The Debian package:
+
+    cmake -B build && cd build && ctest && cpack -G DEB
+    sudo apt install ./python3-hsm-dispatcher_0.1.0_all.deb
+
+`ctest` runs the scenario tests with the Python CMake finds
+(`-DPython3_EXECUTABLE=...` selects another one). The package depends on
+`python3-libcyberiadamlpp`.
+
+With pip (a virtual environment, the user site, Windows, macOS):
+
+    python3 -m venv --system-site-packages venv && . venv/bin/activate
+    pip install /path/to/hsm-dispatcher-py
+
+`--system-site-packages` lets the environment see an installed `CyberiadaML`
+module; for a module that is built but not installed, write the build
+directory into a `.pth` file of the environment instead:
+
+    echo /path/to/libcyberiadamlpp-py/build > "$(python -c "import sysconfig; print(sysconfig.get_paths()['purelib'])")/cyberiadaml.pth"
+
+Check with `python3 -c "import hsmd"`. The modules are plain files, so the
+directory of the repository on the Python path works as well.
+
 ## Usage
 
 ```python
@@ -40,9 +69,7 @@ calls them from the action text, which is Python. The standard component
 types are `Timer` and `Log`. A component is local to its machine or shared
 by the machines of the document (`shared/ yes` in the declaration). A
 program may run a part of the machines (`machines=[...]`) and give the text
-its own namespace (`namespace=globals()`). The
-modules are plain files: install them with `pip install .` from the
-repository, or add its directory to the Python path.
+its own namespace (`namespace=globals()`).
 
 ## Tests
 
@@ -66,3 +93,4 @@ point the environment to a current build:
 * python3 (version 3.8+)
 * libcyberiadamlpp-py (version 1.0.7+, the `CyberiadaML` module and its
   dependencies)
+* cmake (version 3.16+) - for the Debian package
