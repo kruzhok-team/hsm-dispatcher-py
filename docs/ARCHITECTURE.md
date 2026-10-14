@@ -1,6 +1,6 @@
 # The Python HSM Dispatcher Architecture
 
-Document version: 0.5 (2026-10-06)
+Document version: 0.6 (2026-10-14)
 
 The dispatcher executes Hierarchical State Machine (HSM) diagrams at run
 time. The diagrams are stored in the CyberiadaML-GraphML format (CGML,
@@ -125,9 +125,9 @@ state and `get_transitions()` of a machine. For every machine it builds:
 * the pool of the trigger names;
 * the component declarations: the identifier, the type, the priority, the
   visibility and the other parameters of each `CGML_COMPONENT <id>` comment;
-* the other formal comments, name and body, kept for the application
-  (prompts, settings); `CGML_META` is the document's, informal comments are
-  not read.
+* the other formal comments, name and body, and the informal comments,
+  body only, kept for the application (prompts, settings, conventions of a
+  tool); `CGML_META` is the document's.
 
 The binding leaves two things to the caller, and the reader resolves them:
 the meta defaults (`actionFirst`, `block`) and the parameters in the body of
@@ -188,6 +188,12 @@ the document order, each making its own step; the signal of a shared
 component is offered to every machine too, the signal of a local one to its
 own machine only (see "Components"). The machines influence each other
 through the shared components only.
+
+The application may start a part of the machines (`machines=[...]`): the
+others are loaded, so a submachine state can refer to them, but they get no
+configuration and no components. Every machine needs its initial
+pseudostate all the same, since a referenced one is entered by default
+through it.
 
 ## The step
 
@@ -260,7 +266,13 @@ evaluated as a Python expression. The names visible to the text:
 
 * the component identifiers of the machine;
 * `event` - the event being processed: `event.name` and its parameters as
-  attributes.
+  attributes;
+* the entries of the namespace the application gave to the dispatcher
+  (`namespace=`), if any: a program may pass its own `globals()`, so its
+  functions and variables are the text's, and `global x` in the text
+  assigns the program's variable. The dictionary is shared by the started
+  machines; the same identifier used by the local components of two of them
+  is an error.
 
 ```
 entry/
@@ -500,8 +512,10 @@ natural moment is after `run()`, when the queue is empty.
 
 `Dispatcher` (`hsmd.py`):
 
-* `Dispatcher(path, clock=None, trace=None, output=None)` - load the
-  document, create the components;
+* `Dispatcher(path, clock=None, trace=None, output=None, machines=None,
+  namespace=None)` - load the document, create the components; `machines`
+  names the ones to run (all without it), `namespace` is the dictionary
+  the text of the machines runs in (a new one without it);
 * `start()` - enter the initial configuration of every machine, process
   the queue, return the outcomes;
 * `post(name, priority=0, machine=None, **parameters)` - put an event into
@@ -515,8 +529,9 @@ natural moment is after `run()`, when the queue is empty.
   state;
 * `triggers(machine=None)` - the trigger names of the transitions that can
   be selected in the current configuration, the guards not evaluated;
-* `comments(machine=None)` - the formal comments the dispatcher does not
-  interpret, as `(name, body)` pairs in the document order;
+* `comments(machine=None, formal=True)` - the comments the dispatcher does
+  not interpret, as `(name, body)` pairs in the document order: the formal
+  ones, the informal ones (`False`, the name is empty) or both (`None`);
 * `snapshot()`, `restore(data)`;
 * `stopped` - set after an error.
 
