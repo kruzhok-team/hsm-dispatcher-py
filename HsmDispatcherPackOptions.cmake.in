@@ -1,0 +1,20 @@
+set(CPACK_VERBATIM_VARIABLES YES)
+set(CPACK_PACKAGE_VERSION_MAJOR @PROJECT_VERSION_MAJOR@)
+set(CPACK_PACKAGE_VERSION_MINOR @PROJECT_VERSION_MINOR@)
+set(CPACK_PACKAGE_VERSION_PATCH @PROJECT_VERSION_PATCH@)
+set(CPACK_PACKAGE_VENDOR "Kruzhok Association")
+set(CPACK_PACKAGE_CONTACT "aleksey@fedoseev.net")
+set(CPACK_RESOURCE_FILE_LICENSE "@PROJECT_SOURCE_DIR@/LICENSE")
+set(CPACK_RESOURCE_FILE_README "@PROJECT_SOURCE_DIR@/README.md")
+
+# the pure Python modules of the dispatcher
+set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "all")
+set(CPACK_DEBIAN_PACKAGE_NAME "python3-hsm-dispatcher")
+set(CPACK_DEBIAN_PACKAGE_SECTION "python")
+set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "The Python interpreter of the CyberiadaML HSM diagrams
+Executes hierarchical state machine diagrams at run time with the semantics
+of PNST 984-2024: the event queue, the hierarchy, history, deferred and
+propagated events, submachine states, and Python components the action text
+of the diagram calls. The module hsmd.")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "python3 (>= 3.8), python3-libcyberiadamlpp (>= 1.0.7)")
