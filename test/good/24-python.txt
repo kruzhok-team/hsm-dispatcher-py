@@ -1,0 +1,108 @@
+> build robot
+> start
+  fire R init-idle
+  enter R idle
+  print log idle
+> send PING
+  post PING 0
+  event PING
+  fire R idle#1
+  print log pong
+  outcome R fired idle#1
+= PING fired idle#1
+> send GO speed=2
+  post GO 0
+  event GO
+  guard R idle-work go_guard False
+  outcome R rejected
+= GO rejected
+> send GO speed=5
+  post GO 0
+  event GO
+  guard R idle-work go_guard True
+  fire R idle-work
+  exit R idle
+  enter R work
+  fire R work-init-step
+  enter R step
+  outcome R fired idle-work
+= GO fired idle-work
+> states
+= work step
+> send TICK
+  post TICK 0
+  event TICK
+  fire R work#1
+  print log step 1
+  outcome R fired work#1
+= TICK fired work#1
+> send TICK
+  post TICK 0
+  event TICK
+  fire R work#1
+  print log step 2
+  outcome R fired work#1
+= TICK fired work#1
+> send STOP again=True
+  post STOP 0
+  event STOP
+  fire R work-again
+  exit R step
+  exit R work
+  guard R again-idle event.again True
+  fire R again-idle
+  enter R idle
+  print log idle
+  outcome R fired work-again again-idle
+= STOP fired work-again again-idle
+> states
+= idle
+> send GO speed=9
+  post GO 0
+  event GO
+  guard R idle-work go_guard True
+  fire R idle-work
+  exit R idle
+  enter R work
+  fire R work-init-step
+  enter R step
+  outcome R fired idle-work
+= GO fired idle-work
+> send STOP again=False
+  post STOP 0
+  event STOP
+  fire R work-again
+  exit R step
+  exit R work
+  guard R again-idle event.again False
+  fire R again-fin
+  finished R
+  outcome R fired work-again again-fin
+= STOP fired work-again again-fin
+> finished
+= True
+> build robot
+> start
+  fire R init-idle
+  enter R idle
+  print log idle
+> error send BREAK
+  post BREAK 0
+  event BREAK
+  fire R idle#2
+  error machine 'R', state 'idle', internal transition 2, line 2: ZeroDivisionError: division by zero
+! ActionError: machine 'R', state 'idle', internal transition 2, line 2: ZeroDivisionError: division by zero
+> error build bad two_initials
+! DocumentError: machine 'A', 'A': two initial pseudostates
+> error build bad unknown_target
+! DocumentError: machine 'B', transition 'B.initial-T': unknown source or target
+> error build bad no_event
+! DocumentError: machine 'C', state 'S', internal transition 1: no event
+> error build bad same_id
+! DocumentError: machine 'D': two vertices 'S'
+> error build bad not_code
+! DocumentError: machine 'E', state 'S', entry: the code is neither text nor a function
+> error build bad no_initial
+! DocumentError: machine 'F': no initial pseudostate
+> error build bad event_on_initial
+! DocumentError: machine 'G', transition 'G.initial-S': an event on a pseudostate transition

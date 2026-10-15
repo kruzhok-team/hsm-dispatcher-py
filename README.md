@@ -71,10 +71,34 @@ by the machines of the document (`shared/ yes` in the declaration). A
 program may run a part of the machines (`machines=[...]`) and give the text
 its own namespace (`namespace=globals()`).
 
+A machine may be written in Python instead: the code is functions, the
+structure a tree of declarations, and neither the diagram file nor
+`CyberiadaML` is needed to run it (hsm-to-python generates such programs):
+
+```python
+def go_guard():
+    return event.speed > 3
+
+
+machine = hsmd.Machine('Robot', states=[
+    hsmd.Initial(id='init'),
+    hsmd.State('Idle', entry="log.print('idle')"),
+    hsmd.State('Work'),
+], transitions=[
+    hsmd.Transition('init', 'Idle'),
+    hsmd.Transition('Idle', 'Work', 'GO', guard=go_guard),
+], components=[
+    hsmd.Declaration('log', 'Log'),
+])
+
+dispatcher = hsmd.Dispatcher(machine, namespace=globals())
+```
+
 ## Tests
 
     cd test
     python3 run.py            # compare with the good files
+    python3 run.py --built    # the same, every document rebuilt from declarations
     python3 run.py --regen    # record the good files again
 
 Each test is a diagram from `test/graphs`, a scenario from `test/scripts`

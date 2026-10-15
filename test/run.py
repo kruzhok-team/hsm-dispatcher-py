@@ -23,12 +23,14 @@
 
 import ast
 import difflib
+import importlib.util
 import io
 import json
 import os
 import shlex
 import subprocess
 import sys
+import tempfile
 
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(TEST_DIR))
@@ -36,6 +38,7 @@ sys.path.insert(0, os.path.dirname(TEST_DIR))
 import hsmd  # pylint: disable=wrong-import-position
 
 GRAPHS_DIR = os.path.join(TEST_DIR, 'graphs')
+MACHINES_DIR = os.path.join(TEST_DIR, 'machines')
 SCRIPTS_DIR = os.path.join(TEST_DIR, 'scripts')
 GOOD_DIR = os.path.join(TEST_DIR, 'good')
 # the validator of the standard, used when the repository is found
@@ -86,7 +89,44 @@ def parse_value(text):
         return text
 
 
+def declare(machine):
+    """The declarations of a machine read from a document, with its text:
+    the round trip of --built."""
+    def reaction(r):
+        return {'guard': r.guard or None, 'action': r.behavior or None,
+                'propagate': r.propagation, 'defer': r.defer}
+
+    def vertex(v):
+        if v.kind in ('state', 'composite'):
+            return hsmd.State(v.name, id=v.id, entry=[b.text for b in v.entry],
+                              exit=[b.text for b in v.exit],
+                              internal=[hsmd.On(r.trigger, **reaction(r))
+                                        for r in v.reactions if r.target is None],
+                              states=[vertex(c) for c in v.children])
+        if v.kind in ('shallow', 'deep'):
+            return hsmd.History(id=v.id, deep=v.kind == 'deep')
+        if v.kind in ('entry', 'exit'):
+            return {'entry': hsmd.EntryPoint, 'exit': hsmd.ExitPoint}[v.kind](v.name, id=v.id)
+        if v.kind == 'choice':
+            return hsmd.Choice(id=v.id, name=v.name)
+        return {'initial': hsmd.Initial, 'final': hsmd.Final,
+                'terminate': hsmd.Terminate}[v.kind](id=v.id)
+
+    return hsmd.Machine(
+        machine.name, id=machine.id,
+        states=[vertex(c) for c in machine.root.children],
+        transitions=[hsmd.Transition(r.source.id, r.target.id, r.trigger, id=r.id, **reaction(r))
+                     for v in machine.vertices.values() for r in v.reactions
+                     if r.target is not None],
+        components=[hsmd.Declaration(d.id, d.type, d.priority, d.shared, **d.parameters)
+                    for d in machine.components],
+        transition_order=machine.transition_order, propagate=machine.propagate,
+        comments=machine.comments + [('', body) for body in machine.informal])
+
+
 class Scenario:
+
+    built = False            # --built: every document goes through declare()
 
     def __init__(self):
         self.lines = []
@@ -110,17 +150,40 @@ class Scenario:
             self.write('= {} {} {}'.format(name, outcome.status,
                                            ' '.join(outcome.transitions)).rstrip())
 
+    def dispatch(self, source, machines=None, namespace=None):
+        """A new dispatcher with the clock, the trace and the output of the scenario."""
+        self.dispatcher = hsmd.Dispatcher(source, clock=lambda: self.now / MS_IN_SECOND,
+                                          trace=self.trace, output=self.stream,
+                                          machines=machines, namespace=namespace)
+        self.names = {}
+
+    def load(self, args):
+        """load <file> [machines=a,b]: the document."""
+        options = dict(arg.split('=', 1) for arg in args[1:])
+        machines = options['machines'].split(',') if 'machines' in options else None
+        source = args[0]
+        if self.built:
+            import hsmd_reader  # pylint: disable=import-outside-toplevel
+            source = [declare(m) for m in hsmd_reader.load(source)]
+        self.dispatch(source, machines, self.names or None)
+
+    def build(self, args):
+        """build <module> [<name>]: the machine written in Python in
+        machines/<module>.py, `machine` by default."""
+        spec = importlib.util.spec_from_file_location(
+            'machines_' + args[0], os.path.join(MACHINES_DIR, args[0] + '.py'))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        self.dispatch(getattr(module, args[1] if len(args) > 1 else 'machine'),
+                      namespace=vars(module))
+
     def command(self, words):
         name, args = words[0], words[1:]
         dispatcher = self.dispatcher
         if name == 'load':
-            options = dict(arg.split('=', 1) for arg in args[1:])
-            machines = options['machines'].split(',') if 'machines' in options else None
-            self.dispatcher = hsmd.Dispatcher(args[0], clock=lambda: self.now / MS_IN_SECOND,
-                                              trace=self.trace, output=self.stream,
-                                              machines=machines,
-                                              namespace=self.names or None)
-            self.names = {}
+            self.load(args)
+        elif name == 'build':
+            self.build(args)
         elif name == 'let':
             self.names[args[0]] = parse_value(args[1])
         elif name == 'start':
@@ -215,47 +278,83 @@ def validate_graphs():
     return bad == 0
 
 
+def check(name, regen):
+    """Play the scenario, compare its output with the good one (or save it);
+    return whether it has failed."""
+    reason = ''
+    try:
+        output = Scenario().play(os.path.join(SCRIPTS_DIR, name + '.txt'))
+    except Exception as e:  # a failure outside an `error` command
+        output = None
+        reason = '{}: {}'.format(type(e).__name__, e)
+    good_path = os.path.join(GOOD_DIR, name + '.txt')
+    if output is None:
+        print('FAIL {}: {}'.format(name, reason))
+        return True
+    if regen:
+        with open(good_path, 'w', encoding='utf-8') as good:
+            good.write(output)
+        print('SAVE {}'.format(name))
+        return False
+    good = ''
+    if os.path.exists(good_path):
+        with open(good_path, encoding='utf-8') as good_file:
+            good = good_file.read()
+    if output == good:
+        print('ok   {}'.format(name))
+        return False
+    print('FAIL {}'.format(name))
+    sys.stdout.writelines(difflib.unified_diff(
+        good.splitlines(True), output.splitlines(True), 'good', 'output'))
+    return True
+
+
+WITHOUT_BINDING = '''
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location('robot', sys.argv[1])
+robot = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(robot)
+import hsmd
+dispatcher = hsmd.Dispatcher(robot.machine, namespace=vars(robot))
+dispatcher.start()
+print(' '.join(dispatcher.states()), 'CyberiadaML' in sys.modules)
+'''
+
+
+def check_without_binding():
+    """A machine written in Python runs where CyberiadaML cannot be imported."""
+    with tempfile.TemporaryDirectory() as blocked:
+        with open(os.path.join(blocked, 'CyberiadaML.py'), 'w', encoding='utf-8') as f:
+            f.write("raise ImportError('CyberiadaML is blocked')\n")
+        env = dict(os.environ, PYTHONPATH=os.pathsep.join([blocked, os.path.dirname(TEST_DIR)]))
+        result = subprocess.run([sys.executable, '-c', WITHOUT_BINDING,
+                                 os.path.join(MACHINES_DIR, 'robot.py')],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                universal_newlines=True, env=env, check=False)
+    if result.returncode != 0 or result.stdout.split() != ['idle', 'False']:
+        print('FAIL without CyberiadaML:\n{}{}'.format(result.stdout, result.stderr))
+        return True
+    print('ok   without CyberiadaML')
+    return False
+
+
 def main():
     args = sys.argv[1:]
     regen = '--regen' in args
-    names = [a for a in args if a != '--regen']
+    Scenario.built = '--built' in args
+    names = [a for a in args if a not in ('--regen', '--built')]
     scripts = sorted(name[:-len('.txt')] for name in os.listdir(SCRIPTS_DIR)
                      if name.endswith('.txt'))
     failed = 0 if validate_graphs() else 1
+    failed += check_without_binding()
     os.chdir(GRAPHS_DIR)     # the diagrams are named without a path
     for name in scripts:
         if names and name not in names:
             continue
-        reason = ''
-        try:
-            output = Scenario().play(os.path.join(SCRIPTS_DIR, name + '.txt'))
-        except Exception as e:  # a failure outside an `error` command
-            output = None
-            reason = '{}: {}'.format(type(e).__name__, e)
-        good_path = os.path.join(GOOD_DIR, name + '.txt')
-        if output is None:
-            print('FAIL {}: {}'.format(name, reason))
-            failed += 1
-        elif regen:
-            with open(good_path, 'w', encoding='utf-8') as good:
-                good.write(output)
-            print('SAVE {}'.format(name))
-        else:
-            good = ''
-            if os.path.exists(good_path):
-                with open(good_path, encoding='utf-8') as good_file:
-                    good = good_file.read()
-            if output == good:
-                print('ok   {}'.format(name))
-            else:
-                print('FAIL {}'.format(name))
-                sys.stdout.writelines(difflib.unified_diff(
-                    good.splitlines(True), output.splitlines(True), 'good', 'output'))
-                failed += 1
+        failed += check(name, regen)
     if failed:
         print('{} failed'.format(failed))
     return 1 if failed else 0
-
 
 if __name__ == '__main__':
     sys.exit(main())

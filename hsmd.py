@@ -25,14 +25,18 @@ import heapq
 import sys
 import time
 
+import hsmd_build
 import hsmd_components
-import hsmd_reader
 from hsmd_actions import ActionError, EVENT_NAME
+from hsmd_build import (Machine, State, Initial, Final, Terminate, Choice, History,
+                        EntryPoint, ExitPoint, On, Transition, Declaration, ELSE)
 from hsmd_components import Component, register
-from hsmd_reader import DispatcherError, DocumentError
+from hsmd_model import DispatcherError, DocumentError
 from hsmd_step import (MachineRun, ExecutionError, FIRED, REJECTED, DROPPED, DEFERRED)
 
 __all__ = ['Dispatcher', 'Event', 'Outcome', 'Component', 'register',
+           'Machine', 'State', 'Initial', 'Final', 'Terminate', 'Choice', 'History',
+           'EntryPoint', 'ExitPoint', 'On', 'Transition', 'Declaration', 'ELSE',
            'DispatcherError', 'DocumentError', 'ActionError', 'ExecutionError',
            'StoppedError', 'FIRED', 'REJECTED', 'DROPPED', 'DEFERRED']
 
@@ -84,9 +88,24 @@ class Outcome:
         return [t for r in self.results for t in r.transitions]
 
 
+def _load(source):
+    """The model: the machines of the document at the path, or the machines
+    written in Python."""
+    if isinstance(source, str):
+        import hsmd_reader  # pylint: disable=import-outside-toplevel
+        return hsmd_reader.load(source)
+    machines = [hsmd_build.build(m) for m in
+                (source if isinstance(source, (list, tuple)) else [source])]
+    idents = [m.id for m in machines]
+    for ident in idents:
+        if idents.count(ident) > 1:
+            raise DocumentError("two machines '{}'".format(ident))
+    return machines
+
+
 class Dispatcher:
 
-    def __init__(self, path, clock=None, trace=None, output=None, machines=None,
+    def __init__(self, source, clock=None, trace=None, output=None, machines=None,
                  namespace=None):
         self.clock = clock if clock is not None else time.monotonic
         self.output = output if output is not None else sys.stderr
@@ -101,7 +120,7 @@ class Dispatcher:
         self._shared = {}                      # id -> component
         self._declarations = {}                # id -> the first shared declaration
         self._local = {}                       # machine id -> id -> component
-        self._machines = hsmd_reader.load(path)
+        self._machines = _load(source)
         for machine in self._selected(machines):
             self._local[machine.id] = {}
             self._deferred[machine.id] = []

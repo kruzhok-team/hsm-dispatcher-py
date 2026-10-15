@@ -21,7 +21,7 @@
 #  -----------------------------------------------------------------------------
 
 import hsmd_actions
-from hsmd_reader import (DispatcherError, ROOT, STATE, COMPOSITE, INITIAL, FINAL, CHOICE,
+from hsmd_model import (DispatcherError, ROOT, STATE, COMPOSITE, INITIAL, FINAL, CHOICE,
                          SHALLOW, ENTRY, EXIT, TERMINATE, HISTORY_KINDS,
                          ACTION_FIRST, EVENT_ANY, EVENT_UNKNOWN)
 
@@ -200,7 +200,8 @@ class MachineRun:
         if reaction.guard_code is None:
             return True
         value = hsmd_actions.check(reaction.guard_code, self.namespace)
-        self.host.trace('guard', self.machine.id, reaction.id, reaction.guard, value)
+        self.host.trace('guard', self.machine.id, reaction.id, hsmd_actions.name(reaction.guard),
+                        value)
         return value
 
     def _fire(self, reaction):

@@ -12,6 +12,8 @@ set(CMAKE_INSTALL_DEFAULT_DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXE
     GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/hsmd.py
+              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_model.py
+              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_build.py
               ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_reader.py
               ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_actions.py
               ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_step.py

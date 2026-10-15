@@ -17,5 +17,9 @@ Added:
 - the selection of the machines to run, the namespace of the application
   for the action text, the formal and informal comments kept for the
   application;
-- the scenario tests (24 scenarios) and the architecture document;
+- the machine written in Python: the declarations (`Machine`, `State`, the
+  pseudostates, `On`, `Transition`, `Declaration`), functions for the code,
+  no `CyberiadaML` at run time (`hsmd_model`, `hsmd_build`);
+- the scenario tests (26 scenarios, also run through the declarations with
+  `--built`) and the architecture document;
 - the pip installation and the Debian package.

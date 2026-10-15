@@ -1,6 +1,6 @@
 # The Python HSM Dispatcher Architecture
 
-Document version: 0.6 (2026-10-14)
+Document version: 0.7 (2026-10-15)
 
 The dispatcher executes Hierarchical State Machine (HSM) diagrams at run
 time. The diagrams are stored in the CyberiadaML-GraphML format (CGML,
@@ -76,21 +76,25 @@ The standards leave these points undefined. The dispatcher fixes them:
 ## Structure
 
 ```
-   hsmd_reader.py            hsmd_step.py            hsmd_actions.py
- +----------------+       +----------------+       +----------------+
- |                | model |                | text  |                |
- |     Reader     | ----> |  Interpreter   | ----> |    Actions     |
- |                |       |                | <---- |                |
- +----------------+       +----------------+ value +----------------+
-         |                   ^          |             |          ^
-    CyberiadaML        event |          | outcome     | calls    | variables
-                             |          v             v          |
-                              hsmd.py               hsmd_components.py
-                          +----------------+       +----------------+
-  application ----------> |                | <---- |   Component    |
-   post, run, tick,       |   Dispatcher   | signal|   Timer, Log   |
-   queries, snapshot      |                |       |   user types   |
-                          +----------------+       +----------------+
+   hsmd_reader.py
+ +----------------+
+ |     Reader     | ---+
+ +----------------+    |    hsmd_model.py         hsmd_step.py              hsmd_actions.py
+    CyberiadaML        +--> +-----------+        +----------------+        +---------------+
+                       |    |   Model   | model  |                |  code  |    Actions    |
+                       |    |   checks  | -----> |  Interpreter   | -----> |    text or    |
+   hsmd_build.py       |    +-----------+        |                |        |   functions   |
+ +----------------+    |                         +----------------+ <----- +---------------+
+ |  Declarations  | ---+                                             value
+ +----------------+                                 ^          |              |         ^
+  a machine written                           event |          | outcome      | calls   | variables
+  in Python                                         |          v              v         |
+                                                 +----------------+        +---------------+
+                           application ------->  |   Dispatcher   | <----- |   Component   |
+                            post, run, tick,     |    hsmd.py     | signal |   Timer, Log  |
+                            queries, snapshot    |                |        |   user types  |
+                                                 +----------------+        +---------------+
+                                                                          hsmd_components.py
 ```
 
 The modules are plain files in the repository root; there is no package.
@@ -98,7 +102,9 @@ The modules are plain files in the repository root; there is no package.
 | Module | Role |
 |---|---|
 | `hsmd.py` | The `Dispatcher`: the queue, the public interface, the snapshot, the trace. The only module an application imports besides the component base. |
-| `hsmd_reader.py` | Opens the document with the binding and builds the model; copies the referenced machines into the submachine states. |
+| `hsmd_model.py` | The model: the vertices, the reactions, the component declarations, the checks of the rules. No CyberiadaML. |
+| `hsmd_reader.py` | Opens the document with the binding and builds the model; copies the referenced machines into the submachine states. Imported only for a document. |
+| `hsmd_build.py` | The declarations of a machine written in Python; builds the same model. |
 | `hsmd_step.py` | The step of one machine for one event. Keeps the active configuration. |
 | `hsmd_actions.py` | Compiles and runs the action and guard text. |
 | `hsmd_components.py` | The `Component` base class, the registry of types, the standard types `Timer` and `Log`. |
@@ -136,6 +142,71 @@ a component comment (`name/ value` blocks, PNST 1044, 10.3.1).
 A document that uses an element outside the current stage (an orthogonal
 region, a `do/` activity) is refused when it is loaded, not when the
 element is reached.
+
+## A machine written in Python
+
+A program may declare its machine in Python instead of loading a document:
+the code of the states and the transitions is functions, the structure is
+a tree of declarations. The dispatcher builds the same model from it, checks
+it by the same rules and runs it without CyberiadaML and without a file;
+hsm-to-python generates such programs.
+
+```python
+def idle_entry():
+    log.print('idle')
+
+
+def go_guard():
+    return event.speed > 3
+
+
+machine = hsmd.Machine('Robot', id='R', states=[
+    hsmd.Initial(id='init'),
+    hsmd.State('Idle', id='idle', entry=idle_entry, internal=[
+        hsmd.On('PING', action="log.print('pong')"),
+    ]),
+    hsmd.State('Work', id='work', states=[
+        hsmd.Initial(id='work-init'),
+        hsmd.State('Step', id='step'),
+    ]),
+    hsmd.Final(id='fin'),
+], transitions=[
+    hsmd.Transition('init', 'idle'),
+    hsmd.Transition('idle', 'work', 'GO', guard=go_guard),
+    hsmd.Transition('work-init', 'step'),
+    hsmd.Transition('work', 'fin', 'STOP'),
+], components=[
+    hsmd.Declaration('log', 'Log'),
+])
+
+dispatcher = hsmd.Dispatcher(machine, namespace=globals())
+```
+
+| Declaration | Meaning |
+|---|---|
+| `Machine(name, id=None, states=(), transitions=(), components=(), transition_order='actionFirst', propagate=False, comments=())` | a state machine; the meta parameters of 6.9; the comments for `comments()`, `(name, body)` pairs, the name empty for an informal one |
+| `State(name, id=None, entry=None, exit=None, internal=(), states=())` | a state, composite when it has `states`; `entry` and `exit` are one piece of code or a list |
+| `Initial(id=None)`, `Final(id=None)`, `Terminate(id=None)`, `Choice(id=None, name='')`, `History(id=None, deep=False)` | the pseudostates |
+| `EntryPoint(name, id=None)`, `ExitPoint(name, id=None)` | the entry and exit points of a state or of the machine |
+| `On(event, guard=None, action=None, propagate=None, defer=False)` | an internal transition of its state |
+| `Transition(source, target, event='', guard=None, action=None, propagate=None, defer=False, id=None)` | a transition between the vertices named by their identifiers |
+| `Declaration(id, type, priority=None, shared=None, **parameters)` | a component, as `CGML_COMPONENT <id>` |
+| `ELSE` | the `[else]` guard |
+
+The identifiers follow the document: a machine or a state without `id` takes
+its name, a pseudostate `<parent>.<kind>` (a point `<parent>.<name>`), an
+internal transition `<state>#<n>`, a transition `<source>-<target>` and
+`#<n>` from the second one with the same ends. `propagate=None` is the
+machine's default. The internal transitions of a state come before its
+outgoing transitions, each in the order written.
+
+A guard or an action is a function or text. Text is compiled like the text
+of a document. A function is called without arguments and works in the
+globals of its module: the program gives them as the namespace
+(`namespace=globals()`), so the function reads `event` and the components
+like the text does and assigns the globals it declares `global`. An error in
+a function names the element and the line of the function's body after its
+`global` statements, like an error of the text.
 
 ## Events and the queue
 
@@ -512,10 +583,12 @@ natural moment is after `run()`, when the queue is empty.
 
 `Dispatcher` (`hsmd.py`):
 
-* `Dispatcher(path, clock=None, trace=None, output=None, machines=None,
-  namespace=None)` - load the document, create the components; `machines`
-  names the ones to run (all without it), `namespace` is the dictionary
-  the text of the machines runs in (a new one without it);
+* `Dispatcher(source, clock=None, trace=None, output=None, machines=None,
+  namespace=None)` - load the document (`source` is its path) or build the
+  machines written in Python (a `Machine` or a list of them), create the
+  components; `machines` names the ones to run (all without it),
+  `namespace` is the dictionary the text of the machines runs in (a new one
+  without it);
 * `start()` - enter the initial configuration of every machine, process
   the queue, return the outcomes;
 * `post(name, priority=0, machine=None, **parameters)` - put an event into

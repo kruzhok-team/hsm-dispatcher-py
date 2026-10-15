@@ -18,4 +18,5 @@ classifiers = [
 # not a pip package and is installed by its own build
 
 [tool.setuptools]
-py-modules = ["hsmd", "hsmd_reader", "hsmd_actions", "hsmd_step", "hsmd_components"]
+py-modules = ["hsmd", "hsmd_model", "hsmd_build", "hsmd_reader", "hsmd_actions", "hsmd_step",
+              "hsmd_components"]

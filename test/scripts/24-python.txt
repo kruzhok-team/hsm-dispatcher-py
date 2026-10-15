@@ -1,0 +1,26 @@
+# a machine written in Python: the code is functions, the structure declarations
+build robot
+start
+send PING
+send GO speed=2
+send GO speed=5
+states
+send TICK
+send TICK
+send STOP again=True
+states
+send GO speed=9
+send STOP again=False
+finished
+# an error in a function names the element and the line of its body
+build robot
+start
+error send BREAK
+# the declarations are checked by the rules of a document
+error build bad two_initials
+error build bad unknown_target
+error build bad no_event
+error build bad same_id
+error build bad not_code
+error build bad no_initial
+error build bad event_on_initial
