@@ -17,5 +17,8 @@ Added:
 - the selection of the machines to run, the namespace of the application
   for the action text, the formal and informal comments kept for the
   application;
-- the scenario tests (24 scenarios) and the architecture document;
+- the documents given as texts: `Dispatcher(documents=)` and
+  `read_documents()`, so a program carries its diagrams;
+- the scenario tests (26 scenarios, also run from the texts with
+  `--documents`) and the architecture document;
 - the pip installation and the Debian package.

@@ -1,0 +1,8 @@
+# the texts of a document and of the documents it references, loaded from memory
+documents 19-submachine-ext.graphml
+load 19-submachine-ext.graphml
+start
+states
+send GO
+states
+error documents missing.graphml

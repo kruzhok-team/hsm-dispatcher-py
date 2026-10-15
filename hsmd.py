@@ -29,10 +29,10 @@ import hsmd_components
 import hsmd_reader
 from hsmd_actions import ActionError, EVENT_NAME
 from hsmd_components import Component, register
-from hsmd_reader import DispatcherError, DocumentError
+from hsmd_reader import DispatcherError, DocumentError, read_documents
 from hsmd_step import (MachineRun, ExecutionError, FIRED, REJECTED, DROPPED, DEFERRED)
 
-__all__ = ['Dispatcher', 'Event', 'Outcome', 'Component', 'register',
+__all__ = ['Dispatcher', 'Event', 'Outcome', 'Component', 'register', 'read_documents',
            'DispatcherError', 'DocumentError', 'ActionError', 'ExecutionError',
            'StoppedError', 'FIRED', 'REJECTED', 'DROPPED', 'DEFERRED']
 
@@ -87,7 +87,7 @@ class Outcome:
 class Dispatcher:
 
     def __init__(self, path, clock=None, trace=None, output=None, machines=None,
-                 namespace=None):
+                 namespace=None, documents=None):
         self.clock = clock if clock is not None else time.monotonic
         self.output = output if output is not None else sys.stderr
         self.stopped = False
@@ -101,7 +101,7 @@ class Dispatcher:
         self._shared = {}                      # id -> component
         self._declarations = {}                # id -> the first shared declaration
         self._local = {}                       # machine id -> id -> component
-        self._machines = hsmd_reader.load(path)
+        self._machines = hsmd_reader.load(path, documents)
         for machine in self._selected(machines):
             self._local[machine.id] = {}
             self._deferred[machine.id] = []

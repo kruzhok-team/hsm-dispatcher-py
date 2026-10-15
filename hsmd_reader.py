@@ -401,12 +401,15 @@ def _read_machine(sm, meta):
     return machine
 
 
-def _read_document(path):
+def _read_document(path, text=None):
     doc = CyberiadaML.LocalDocument()
     try:
-        doc.open(path, CyberiadaML.formatDetect, CyberiadaML.geometryFormatNone)
+        if text is None:
+            doc.open(path, CyberiadaML.formatDetect, CyberiadaML.geometryFormatNone)
+        else:
+            doc.decode(text, CyberiadaML.formatDetect, CyberiadaML.geometryFormatNone)
     except Exception as e:
-        raise DocumentError(str(e)) from e
+        raise DocumentError(str(e) if text is None else "'{}': {}".format(path, e)) from e
     machines = [_read_machine(sm, doc.get_meta()) for sm in doc.get_state_machines()]
     if not machines:
         raise DocumentError("'{}': the document contains no state machines".format(path))
@@ -418,14 +421,16 @@ def _read_document(path):
 
 
 class _Documents:
-    """The documents read so far, by path."""
+    """The documents read so far, by path; a path of the given texts is
+    decoded from its text."""
 
-    def __init__(self):
+    def __init__(self, texts=None):
         self.machines = {}
+        self.texts = {os.path.normpath(p): t for p, t in (texts or {}).items()}
 
     def get(self, path):
         if path not in self.machines:
-            self.machines[path] = _read_document(path)
+            self.machines[path] = _read_document(path, self.texts.get(path))
         return self.machines[path]
 
 
@@ -530,12 +535,32 @@ def _inline_all(machine, path, documents, chain):
             _inline(vertex, machine, path, documents, chain)
 
 
-def load(path):
-    """Read the document, return the list of its state machines."""
-    documents = _Documents()
+def _load(path, texts):
+    documents = _Documents(texts)
     path = os.path.normpath(path)
     machines = documents.get(path)
     for machine in machines:
         _inline_all(machine, path, documents, [(path, machine.id)])
         _check(machine)
-    return machines
+    return machines, documents
+
+
+def load(path, texts=None):
+    """Read the document, return the list of its state machines; texts maps
+    document paths to the texts to decode instead of the files."""
+    return _load(path, texts)[0]
+
+
+def read_documents(path):
+    """The texts of the document and of the documents its submachine states
+    reference, by their paths relative to the document's directory."""
+    path = os.path.normpath(path)
+    base = os.path.dirname(path) or os.curdir
+    texts = {}
+    for name in _load(path, None)[1].machines:
+        try:
+            with open(name, encoding='utf-8-sig') as document:
+                texts[os.path.relpath(name, base)] = document.read()
+        except (OSError, UnicodeError) as e:
+            raise DocumentError("'{}': {}".format(name, e)) from e
+    return texts
