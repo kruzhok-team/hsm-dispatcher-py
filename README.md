@@ -69,16 +69,12 @@ calls them from the action text, which is Python. The standard component
 types are `Timer` and `Log`. A component is local to its machine or shared
 by the machines of the document (`shared/ yes` in the declaration). A
 program may run a part of the machines (`machines=[...]`) and give the text
-its own namespace (`namespace=globals()`). A program may carry its diagram:
-`hsmd.read_documents(path)` gives the texts of the document and of the
-documents its submachine states reference, `documents=` decodes them
-instead of the files.
+its own namespace (`namespace=globals()`).
 
 ## Tests
 
     cd test
     python3 run.py            # compare with the good files
-    python3 run.py --documents  # the same, every diagram decoded from its text
     python3 run.py --regen    # record the good files again
 
 Each test is a diagram from `test/graphs`, a scenario from `test/scripts`

@@ -29,7 +29,6 @@ import os
 import shlex
 import subprocess
 import sys
-import tempfile
 
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(TEST_DIR))
@@ -89,8 +88,6 @@ def parse_value(text):
 
 class Scenario:
 
-    documents = None         # the texts every load decodes (--documents)
-
     def __init__(self):
         self.lines = []
         self.now = 0             # milliseconds
@@ -98,7 +95,6 @@ class Scenario:
         self.dispatcher = None
         self.saved = None
         self.names = {}          # the namespace given to the next dispatcher
-        self.texts = None        # the documents given to the next dispatcher
 
     def write(self, text):
         self.lines.append(text.rstrip())
@@ -114,35 +110,17 @@ class Scenario:
             self.write('= {} {} {}'.format(name, outcome.status,
                                            ' '.join(outcome.transitions)).rstrip())
 
-    def load(self, args):
-        """load <file> [machines=a,b]: a new dispatcher."""
-        options = dict(arg.split('=', 1) for arg in args[1:])
-        machines = options['machines'].split(',') if 'machines' in options else None
-        self.dispatcher = hsmd.Dispatcher(args[0], clock=lambda: self.now / MS_IN_SECOND,
-                                          trace=self.trace, output=self.stream,
-                                          machines=machines,
-                                          namespace=self.names or None,
-                                          documents=self.texts or self.documents)
-        self.names = {}
-        self.texts = None
-
-    def read_documents(self, path):
-        """documents <file>: the texts the next load decodes."""
-        current = os.getcwd()
-        os.chdir(GRAPHS_DIR)     # the files, also when --documents runs elsewhere
-        try:
-            self.texts = hsmd.read_documents(path)
-        finally:
-            os.chdir(current)
-        self.write('= ' + ' '.join(self.texts))
-
     def command(self, words):
         name, args = words[0], words[1:]
         dispatcher = self.dispatcher
         if name == 'load':
-            self.load(args)
-        elif name == 'documents':
-            self.read_documents(args[0])
+            options = dict(arg.split('=', 1) for arg in args[1:])
+            machines = options['machines'].split(',') if 'machines' in options else None
+            self.dispatcher = hsmd.Dispatcher(args[0], clock=lambda: self.now / MS_IN_SECOND,
+                                              trace=self.trace, output=self.stream,
+                                              machines=machines,
+                                              namespace=self.names or None)
+            self.names = {}
         elif name == 'let':
             self.names[args[0]] = parse_value(args[1])
         elif name == 'start':
@@ -237,70 +215,47 @@ def validate_graphs():
     return bad == 0
 
 
-def read_graphs():
-    """The texts of every test diagram, by the path in the diagrams directory."""
-    texts = {}
-    for folder, _, files in os.walk(GRAPHS_DIR):
-        for name in files:
-            if name.endswith('.graphml'):
-                path = os.path.join(folder, name)
-                with open(path, encoding='utf-8') as document:
-                    texts[os.path.relpath(path, GRAPHS_DIR)] = document.read()
-    return texts
-
-
-def check(name, regen):
-    """Play the scenario, compare its output with the good one (or save it);
-    return whether it has failed."""
-    reason = ''
-    try:
-        output = Scenario().play(os.path.join(SCRIPTS_DIR, name + '.txt'))
-    except Exception as e:  # a failure outside an `error` command
-        output = None
-        reason = '{}: {}'.format(type(e).__name__, e)
-    good_path = os.path.join(GOOD_DIR, name + '.txt')
-    if output is None:
-        print('FAIL {}: {}'.format(name, reason))
-        return True
-    if regen:
-        with open(good_path, 'w', encoding='utf-8') as good:
-            good.write(output)
-        print('SAVE {}'.format(name))
-        return False
-    good = ''
-    if os.path.exists(good_path):
-        with open(good_path, encoding='utf-8') as good_file:
-            good = good_file.read()
-    if output == good:
-        print('ok   {}'.format(name))
-        return False
-    print('FAIL {}'.format(name))
-    sys.stdout.writelines(difflib.unified_diff(
-        good.splitlines(True), output.splitlines(True), 'good', 'output'))
-    return True
-
-
 def main():
     args = sys.argv[1:]
     regen = '--regen' in args
-    names = [a for a in args if a not in ('--regen', '--documents')]
+    names = [a for a in args if a != '--regen']
     scripts = sorted(name[:-len('.txt')] for name in os.listdir(SCRIPTS_DIR)
                      if name.endswith('.txt'))
     failed = 0 if validate_graphs() else 1
-    with tempfile.TemporaryDirectory() as empty:
-        if '--documents' in args:
-            # every diagram is decoded from its text, none is on the disk
-            Scenario.documents = read_graphs()
-            os.chdir(empty)
+    os.chdir(GRAPHS_DIR)     # the diagrams are named without a path
+    for name in scripts:
+        if names and name not in names:
+            continue
+        reason = ''
+        try:
+            output = Scenario().play(os.path.join(SCRIPTS_DIR, name + '.txt'))
+        except Exception as e:  # a failure outside an `error` command
+            output = None
+            reason = '{}: {}'.format(type(e).__name__, e)
+        good_path = os.path.join(GOOD_DIR, name + '.txt')
+        if output is None:
+            print('FAIL {}: {}'.format(name, reason))
+            failed += 1
+        elif regen:
+            with open(good_path, 'w', encoding='utf-8') as good:
+                good.write(output)
+            print('SAVE {}'.format(name))
         else:
-            os.chdir(GRAPHS_DIR)     # the diagrams are named without a path
-        for name in scripts:
-            if not names or name in names:
-                failed += check(name, regen)
-        os.chdir(TEST_DIR)
+            good = ''
+            if os.path.exists(good_path):
+                with open(good_path, encoding='utf-8') as good_file:
+                    good = good_file.read()
+            if output == good:
+                print('ok   {}'.format(name))
+            else:
+                print('FAIL {}'.format(name))
+                sys.stdout.writelines(difflib.unified_diff(
+                    good.splitlines(True), output.splitlines(True), 'good', 'output'))
+                failed += 1
     if failed:
         print('{} failed'.format(failed))
     return 1 if failed else 0
+
 
 if __name__ == '__main__':
     sys.exit(main())

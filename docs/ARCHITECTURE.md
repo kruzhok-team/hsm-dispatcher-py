@@ -1,6 +1,6 @@
 # The Python HSM Dispatcher Architecture
 
-Document version: 0.7 (2026-10-15)
+Document version: 0.6 (2026-10-14)
 
 The dispatcher executes Hierarchical State Machine (HSM) diagrams at run
 time. The diagrams are stored in the CyberiadaML-GraphML format (CGML,
@@ -435,9 +435,7 @@ same type is one component, a different type is an error, a new identifier
 is added. A circular reference is an error. The meta parameters of an
 external document are ignored: the host's apply. A machine referenced in
 the same document runs on its own as well, so it needs an initial
-pseudostate like any other. The referenced documents may be given as texts
-(`documents`, see Interface): the references resolve against their paths
-the same way.
+pseudostate like any other.
 
 ## Terminate
 
@@ -515,11 +513,9 @@ natural moment is after `run()`, when the queue is empty.
 `Dispatcher` (`hsmd.py`):
 
 * `Dispatcher(path, clock=None, trace=None, output=None, machines=None,
-  namespace=None, documents=None)` - load the document, create the
-  components; `machines` names the ones to run (all without it),
-  `namespace` is the dictionary the text of the machines runs in (a new one
-  without it), `documents` maps document paths to their texts: a path found
-  there is decoded from the text, not read from the disk;
+  namespace=None)` - load the document, create the components; `machines`
+  names the ones to run (all without it), `namespace` is the dictionary
+  the text of the machines runs in (a new one without it);
 * `start()` - enter the initial configuration of every machine, process
   the queue, return the outcomes;
 * `post(name, priority=0, machine=None, **parameters)` - put an event into
@@ -541,18 +537,6 @@ natural moment is after `run()`, when the queue is empty.
 
 A machine is named by its identifier or its name; without the argument the
 first machine of the document is meant.
-
-`read_documents(path)` returns the texts of the document and of the
-documents its submachine states reference, by their paths relative to the
-directory of the document; the document itself comes first, under its file
-name. A program carries its diagram this way and runs without the files:
-
-```
-texts = hsmd.read_documents('examples/robot.graphml')
-         # {'robot.graphml': '<?xml ...', 'lib/arm.graphml': '<?xml ...'}
-dispatcher = hsmd.Dispatcher('robot.graphml', documents=texts)
-         # lib/arm.graphml#A in robot.graphml resolves to the second text
-```
 
 `Event`: `name`, `priority`, `parameters`, `machine` (the addressee, `None`
 for every machine); the parameters are attributes too. `Outcome`: `event`,
