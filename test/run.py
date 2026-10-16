@@ -36,6 +36,7 @@ TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(TEST_DIR))
 
 import hsmd  # pylint: disable=wrong-import-position
+import hsmd_components  # pylint: disable=wrong-import-position
 
 GRAPHS_DIR = os.path.join(TEST_DIR, 'graphs')
 MACHINES_DIR = os.path.join(TEST_DIR, 'machines')
@@ -150,22 +151,24 @@ class Scenario:
             self.write('= {} {} {}'.format(name, outcome.status,
                                            ' '.join(outcome.transitions)).rstrip())
 
-    def dispatch(self, source, machines=None, namespace=None):
+    def dispatch(self, source, machines=None, namespace=None, period=None):
         """A new dispatcher with the clock, the trace and the output of the scenario."""
         self.dispatcher = hsmd.Dispatcher(source, clock=lambda: self.now / MS_IN_SECOND,
                                           trace=self.trace, output=self.stream,
-                                          machines=machines, namespace=namespace)
+                                          machines=machines, namespace=namespace,
+                                          period=period)
         self.names = {}
 
     def load(self, args):
-        """load <file> [machines=a,b]: the document."""
+        """load <file> [machines=a,b] [period=ms]: the document."""
         options = dict(arg.split('=', 1) for arg in args[1:])
         machines = options['machines'].split(',') if 'machines' in options else None
+        period = int(options['period']) / MS_IN_SECOND if 'period' in options else None
         source = args[0]
         if self.built:
             import hsmd_reader  # pylint: disable=import-outside-toplevel
             source = [declare(m) for m in hsmd_reader.load(source)]
-        self.dispatch(source, machines, self.names or None)
+        self.dispatch(source, machines, self.names or None, period)
 
     def build(self, args):
         """build <module> [<name>]: the machine written in Python in
@@ -184,6 +187,10 @@ class Scenario:
             self.load(args)
         elif name == 'build':
             self.build(args)
+        elif name == 'describe':
+            api = hsmd.describe(hsmd_components.find(args[0]))
+            for key in ('signals', 'methods', 'variables'):
+                self.write('= {} {}'.format(key, api[key]))
         elif name == 'let':
             self.names[args[0]] = parse_value(args[1])
         elif name == 'start':

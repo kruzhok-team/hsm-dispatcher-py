@@ -1,0 +1,21 @@
+# the time events of tick(), counted from start(); TIME_TICK_1H is not used, not posted
+load 25-time.graphml period=100
+start
+clock 100
+tick
+# a late tick posts each event once
+clock 900
+tick
+clock 59000
+tick
+clock 3600000
+tick
+output
+# no period, no time events
+load 25-time.graphml
+start
+clock 60000
+tick
+# the declared API of the standard components
+describe Timer
+describe Log

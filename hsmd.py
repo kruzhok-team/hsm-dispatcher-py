@@ -30,11 +30,11 @@ import hsmd_components
 from hsmd_actions import ActionError, EVENT_NAME
 from hsmd_build import (Machine, State, Initial, Final, Terminate, Choice, History,
                         EntryPoint, ExitPoint, On, Transition, Declaration, ELSE)
-from hsmd_components import Component, register
+from hsmd_components import Component, register, describe, TIME_EVENTS
 from hsmd_model import DispatcherError, DocumentError
 from hsmd_step import (MachineRun, ExecutionError, FIRED, REJECTED, DROPPED, DEFERRED)
 
-__all__ = ['Dispatcher', 'Event', 'Outcome', 'Component', 'register',
+__all__ = ['Dispatcher', 'Event', 'Outcome', 'Component', 'register', 'describe', 'TIME_EVENTS',
            'Machine', 'State', 'Initial', 'Final', 'Terminate', 'Choice', 'History',
            'EntryPoint', 'ExitPoint', 'On', 'Transition', 'Declaration', 'ELSE',
            'DispatcherError', 'DocumentError', 'ActionError', 'ExecutionError',
@@ -106,8 +106,10 @@ def _load(source):
 class Dispatcher:
 
     def __init__(self, source, clock=None, trace=None, output=None, machines=None,
-                 namespace=None):
+                 namespace=None, period=None):
         self.clock = clock if clock is not None else time.monotonic
+        self.period = period
+        self._times = []                       # [name, seconds, due] of the time events
         self.output = output if output is not None else sys.stderr
         self.stopped = False
         self._trace = trace
@@ -196,9 +198,22 @@ class Dispatcher:
     # ------------------------------------------------------------------------
     # the interface of the application
 
+    def _schedule(self):
+        """The time events the started machines trigger on, counted from now."""
+        self._times = []
+        if self.period is None:
+            return
+        used = set().union(*(run.machine.pool for run in self._runs))
+        now = self.clock()
+        for name, seconds in TIME_EVENTS:
+            seconds = self.period if seconds is None else seconds
+            if name in used and seconds > 0:
+                self._times.append([name, seconds, now + seconds])
+
     def start(self):
         """Enter the initial configuration of every machine."""
         self._check()
+        self._schedule()
         self._guarded(lambda: [run.start() for run in self._runs])
         return self.run()
 
@@ -231,6 +246,11 @@ class Dispatcher:
         """Let the components check the clock, then process the queue."""
         self._check()
         now = self.clock()
+        for item in self._times:
+            if now >= item[2]:
+                self.post(item[0])
+                while item[2] <= now:   # once, at whole periods from the start
+                    item[2] += item[1]
         for component in list(self._components()):
             self._guarded(lambda c=component: c.tick(now))
         return self.run()
@@ -292,6 +312,7 @@ class Dispatcher:
         for mid, components in self._local.items():
             for cid, component in components.items():
                 component.restore(data['components']['local'][mid][cid])
+        self._schedule()
         self.stopped = False
 
     # ------------------------------------------------------------------------

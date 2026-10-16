@@ -1,6 +1,6 @@
 # The Python HSM Dispatcher Architecture
 
-Document version: 0.7 (2026-10-15)
+Document version: 0.8 (2026-10-17)
 
 The dispatcher executes Hierarchical State Machine (HSM) diagrams at run
 time. The diagrams are stored in the CyberiadaML-GraphML format (CGML,
@@ -382,6 +382,22 @@ declaration with an unknown type is an error. The parameters of the
 declaration other than `type`, `priority` and `shared` are passed to the
 type as strings. The identifier `event` is reserved.
 
+A type declares what the diagram may use, for the checks of the tools:
+`signals` maps each signal to the names of its parameters (`None`, the
+default, when the type does not declare them), `variables` names the values
+the text reads, and the methods are the public functions of the class.
+`describe(cls)` returns the three:
+
+```
+describe(Timer) = {'methods': {'start': ['interval'], 'reset': [], 'enable': [], 'disable': []},
+                   'variables': ['interval', 'enabled', 'difference'],
+                   'signals': {'TIMEOUT': ()}}
+```
+
+The standard types: `Timer` (see Time) and `Log` (`print(...)`, no signals).
+Only the types that raise events or need the dispatcher belong to it: a
+counter, an array, a random number are plain Python in the text.
+
 ### Visibility
 
 A component is **local** or **shared**. A local component belongs to the
@@ -440,6 +456,25 @@ The timer counts in whole milliseconds. It raises one `TIMEOUT` in a
 `tick()` at most and counts the next interval from that tick, so a late
 `tick()` does not produce a burst. `enable()` and `reset()` start the count
 again; `disable()` keeps the time left in `difference`.
+
+### The time events
+
+Given a period (`Dispatcher(..., period=0.1)`, seconds), `tick()` also posts
+the time events, counted from `start()` on the dispatcher's clock
+(`TIME_EVENTS`):
+
+| Event | Every |
+|---|---|
+| `TIME_TICK` | the period |
+| `TIME_TICK_1S` | second |
+| `TIME_TICK_1M` | minute |
+| `TIME_TICK_1H` | hour |
+
+Only the events a started machine triggers on are posted (`ANY` and
+`UNKNOWN` do not ask for them). The events stay at whole periods from the
+start: a late `tick()` posts each one once and skips the missed ones.
+`restore()` starts the count again. The names are those of the Cyberiada
+platforms (the Berloga and yEd diagrams); the standards have no time events.
 
 ## Printing
 
@@ -584,11 +619,11 @@ natural moment is after `run()`, when the queue is empty.
 `Dispatcher` (`hsmd.py`):
 
 * `Dispatcher(source, clock=None, trace=None, output=None, machines=None,
-  namespace=None)` - load the document (`source` is its path) or build the
-  machines written in Python (a `Machine` or a list of them), create the
-  components; `machines` names the ones to run (all without it),
+  namespace=None, period=None)` - load the document (`source` is its path)
+  or build the machines written in Python (a `Machine` or a list of them),
+  create the components; `machines` names the ones to run (all without it),
   `namespace` is the dictionary the text of the machines runs in (a new one
-  without it);
+  without it), `period` (seconds) makes `tick()` post the time events;
 * `start()` - enter the initial configuration of every machine, process
   the queue, return the outcomes;
 * `post(name, priority=0, machine=None, **parameters)` - put an event into
@@ -596,7 +631,8 @@ natural moment is after `run()`, when the queue is empty.
 * `run()` - process the queue until it is empty, return the outcomes;
 * `send(name, **parameters)` - `post()` and `run()`, return the outcome of
   the event;
-* `tick()` - let the components check the clock, then `run()`;
+* `tick()` - post the due time events, let the components check the
+  clock, then `run()`;
 * `states(machine=None)` - the active states;
 * `finished(machine=None)` - whether the machine has reached its final
   state;
@@ -627,6 +663,11 @@ further), `StoppedError` (the dispatcher is stopped).
 * `Component(ident, dispatcher, **parameters)` - the constructor a type
   keeps; `id`, `dispatcher`, `parameters`;
 * `Component.priority` - the default priority of the type;
+* `Component.signals` - signal -> the names of its parameters, `None` when
+  not declared; `Component.variables` - the names the text reads;
+* `describe(cls)` - the methods, the variables and the signals of a type;
+* `TIME_EVENTS` - the time events of `tick()`: `(name, seconds)`, `None`
+  for the period of the dispatcher;
 * `Component.shared` - the default visibility of the type; `machine` - the
   owning machine of a local instance, `None` for a shared one;
 * `Component.signal(name, **parameters)` - raise the event `<id>.<name>`;

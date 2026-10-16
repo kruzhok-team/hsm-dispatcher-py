@@ -20,7 +20,15 @@
 #
 #  -----------------------------------------------------------------------------
 
+import inspect
+
 MS_IN_SECOND = 1000
+# the time events of Dispatcher.tick(): the name and the period in seconds,
+# None for the period of the dispatcher
+TIME_EVENTS = (('TIME_TICK', None), ('TIME_TICK_1S', 1), ('TIME_TICK_1M', 60),
+               ('TIME_TICK_1H', 3600))
+# the methods of Component the dispatcher calls, not the text
+SERVICE_METHODS = ('signal', 'tick', 'snapshot', 'restore')
 
 _registry = {}
 
@@ -40,6 +48,8 @@ class Component:
 
     priority = 0
     shared = False       # one instance per document, signals to every machine
+    signals = None       # signal -> the names of its parameters; None: not declared
+    variables = ()       # the names the text reads
 
     def __init__(self, ident, dispatcher, **parameters):
         self.id = ident
@@ -65,6 +75,8 @@ class Timer(Component):
     """The periodic timer; the time is counted in whole milliseconds."""
 
     SIGNAL_TIMEOUT = 'TIMEOUT'
+    signals = {SIGNAL_TIMEOUT: ()}
+    variables = ('interval', 'enabled', 'difference')
 
     def __init__(self, ident, dispatcher, **parameters):
         Component.__init__(self, ident, dispatcher, **parameters)
@@ -119,9 +131,24 @@ class Timer(Component):
 class Log(Component):
     """The messages of the diagram: the trace and the output stream."""
 
+    signals = {}
+
     def print(self, *values):
         self.dispatcher.message(self, ' '.join(str(v) for v in values))
 
 
 register('Timer', Timer)
 register('Log', Log)
+
+
+def describe(cls):
+    """The API of a component type: its methods with their parameters, its
+    variables and its signals with theirs (None: not declared)."""
+    methods = {}
+    for name, member in inspect.getmembers(cls, inspect.isfunction):
+        if name.startswith('_') or name in SERVICE_METHODS:
+            continue
+        methods[name] = list(inspect.signature(member).parameters)[1:]
+    signals = cls.signals
+    return {'methods': methods, 'variables': list(cls.variables),
+            'signals': None if signals is None else dict(signals)}
