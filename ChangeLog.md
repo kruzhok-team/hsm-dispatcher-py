@@ -1,6 +1,6 @@
 # hsm-dispatcher-py project changelog
 
-## Version 0.1.0 (unreleased)
+## Version 0.1.0
 
 Added:
 - the dispatcher of the CyberiadaML state machine diagrams: the reader over
@@ -8,9 +8,6 @@ Added:
   the priority of the components, the hierarchy with the `actionFirst` and
   `exitFirst` orders, the `propagate` and `block` flags, the special events
   `ANY` and `UNKNOWN`, choice and completion transitions;
-- the stage 2 elements: shallow and deep history, deferred events, entry and
-  exit points, submachine states inlined from the same or from another
-  document, terminate;
 - the components: the base class, the registry, the local and shared
   visibility, the standard `Timer` (periodic or `once()`), `Log`, `Clock`
   (the local time and the `ALARM`) and `Console` (`LINE`, `EOF` from the
