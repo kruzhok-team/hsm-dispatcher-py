@@ -12,7 +12,9 @@ Added:
   exit points, submachine states inlined from the same or from another
   document, terminate;
 - the components: the base class, the registry, the local and shared
-  visibility, the standard `Timer` and `Log`;
+  visibility, the standard `Timer` (periodic or `once()`), `Log`, `Clock`
+  (the local time and the `ALARM`) and `Console` (`LINE`, `EOF` from the
+  input), exported by `hsmd`;
 - the outcomes, the trace, the snapshot and the restore;
 - the selection of the machines to run, the namespace of the application
   for the action text, the formal and informal comments kept for the
@@ -23,6 +25,6 @@ Added:
 - the declared API of the component types (`signals`, `variables`,
   `describe()`) and the time events of `tick()` with a period
   (`TIME_TICK`, `TIME_TICK_1S`, `TIME_TICK_1M`, `TIME_TICK_1H`);
-- the scenario tests (27 scenarios, also run through the declarations with
+- the scenario tests (30 scenarios, also run through the declarations with
   `--built`) and the architecture document;
 - the pip installation and the Debian package.

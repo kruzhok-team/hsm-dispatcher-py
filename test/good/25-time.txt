@@ -74,7 +74,7 @@
 > tick
 > describe Timer
 = signals {'TIMEOUT': ()}
-= methods {'disable': [], 'enable': [], 'reset': [], 'start': ['interval']}
+= methods {'disable': [], 'enable': [], 'once': ['interval'], 'reset': [], 'start': ['interval']}
 = variables ['interval', 'enabled', 'difference']
 > describe Log
 = signals {}

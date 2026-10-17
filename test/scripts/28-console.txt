@@ -1,0 +1,14 @@
+# the Console: a LINE for every line of the input, then EOF once
+load 26-platform.graphml
+start
+tick
+input alpha
+input "бета гамма"
+tick
+input-raw last
+tick
+input-close
+tick
+tick
+output
+describe Console

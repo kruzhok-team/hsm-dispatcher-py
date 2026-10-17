@@ -30,11 +30,13 @@ import hsmd_components
 from hsmd_actions import ActionError, EVENT_NAME
 from hsmd_build import (Machine, State, Initial, Final, Terminate, Choice, History,
                         EntryPoint, ExitPoint, On, Transition, Declaration, ELSE)
-from hsmd_components import Component, register, describe, TIME_EVENTS
+from hsmd_components import (Component, register, describe, TIME_EVENTS, Timer, Log, Clock,
+                             Console)
 from hsmd_model import DispatcherError, DocumentError
 from hsmd_step import (MachineRun, ExecutionError, FIRED, REJECTED, DROPPED, DEFERRED)
 
 __all__ = ['Dispatcher', 'Event', 'Outcome', 'Component', 'register', 'describe', 'TIME_EVENTS',
+           'Timer', 'Log', 'Clock', 'Console',
            'Machine', 'State', 'Initial', 'Final', 'Terminate', 'Choice', 'History',
            'EntryPoint', 'ExitPoint', 'On', 'Transition', 'Declaration', 'ELSE',
            'DispatcherError', 'DocumentError', 'ActionError', 'ExecutionError',
@@ -106,8 +108,11 @@ def _load(source):
 class Dispatcher:
 
     def __init__(self, source, clock=None, trace=None, output=None, machines=None,
-                 namespace=None, period=None):
+                 namespace=None, period=None, calendar=None,
+                 input=None):  # pylint: disable=redefined-builtin
         self.clock = clock if clock is not None else time.monotonic
+        self.calendar = calendar if calendar is not None else time.time
+        self.input = input if input is not None else sys.stdin
         self.period = period
         self._times = []                       # [name, seconds, due] of the time events
         self.output = output if output is not None else sys.stderr

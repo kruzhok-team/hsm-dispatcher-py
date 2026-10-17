@@ -1,0 +1,46 @@
+> load 26-platform.graphml
+> start
+  fire P init-run
+  enter P run
+> tick
+> input alpha
+> input "бета гамма"
+> tick
+  post k.LINE 0
+  post k.LINE 0
+  event k.LINE
+  fire P run#9
+  print log line 'alpha' 'бета гамма'
+  outcome P fired run#9
+  event k.LINE
+  fire P run#9
+  print log line 'бета гамма' 'бета гамма'
+  outcome P fired run#9
+= k.LINE fired run#9
+= k.LINE fired run#9
+> input-raw last
+> tick
+> input-close
+> tick
+  post k.LINE 0
+  post k.EOF 0
+  event k.LINE
+  fire P run#9
+  print log line 'last' 'last'
+  outcome P fired run#9
+  event k.EOF
+  fire P run#10
+  print log eof
+  outcome P fired run#10
+= k.LINE fired run#9
+= k.EOF fired run#10
+> tick
+> output
+| line 'alpha' 'бета гамма'
+| line 'бета гамма' 'бета гамма'
+| line 'last' 'last'
+| eof
+> describe Console
+= signals {'LINE': ('text',), 'EOF': ()}
+= methods {}
+= variables ['last']

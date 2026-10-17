@@ -31,6 +31,7 @@ import shlex
 import subprocess
 import sys
 import tempfile
+import time
 
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(TEST_DIR))
@@ -46,10 +47,15 @@ GOOD_DIR = os.path.join(TEST_DIR, 'good')
 VALIDATOR_DIR = os.path.join(TEST_DIR, '..', '..', 'cyberiadaml-compat-tests')
 
 MS_IN_SECOND = 1000
+# the calendar time of the scenarios at their clock 0: a local time far from the
+# changes of the daylight saving time, 2026-06-15 08:59:00, a Monday
+CALENDAR_START = time.mktime((2026, 6, 15, 8, 59, 0, 0, 0, -1))
 # the diagrams that break the standard on purpose, each loaded with `error
 # load` in a scenario: the file and the requirement the validator names
 EXPECTED_FINDINGS = {'19-submachine-point.graphml': ('CGML-8.1-4',)}
 ERROR_COMMAND = 'error'
+# a line with its newline, a text without it, the end of the input
+INPUT_COMMANDS = ('input', 'input-raw', 'input-close')
 COMMENT = '#'
 
 
@@ -136,6 +142,7 @@ class Scenario:
         self.dispatcher = None
         self.saved = None
         self.names = {}          # the namespace given to the next dispatcher
+        self.pipe = None         # the input of the consoles: (read file, write descriptor)
 
     def write(self, text):
         self.lines.append(text.rstrip())
@@ -156,8 +163,49 @@ class Scenario:
         self.dispatcher = hsmd.Dispatcher(source, clock=lambda: self.now / MS_IN_SECOND,
                                           trace=self.trace, output=self.stream,
                                           machines=machines, namespace=namespace,
-                                          period=period)
+                                          period=period, input=self.input(),
+                                          calendar=lambda: CALENDAR_START +
+                                          self.now / MS_IN_SECOND)
         self.names = {}
+
+    def input(self):
+        """The read end of the input pipe of the scenario."""
+        if self.pipe is None:
+            read, write = os.pipe()
+            self.pipe = (os.fdopen(read, 'rb', buffering=0), write)
+        return self.pipe[0]
+
+    def feed(self, name, args):
+        """input <text>, input-raw <text>, input-close: the input of the consoles."""
+        self.input()
+        text = None if name == 'input-close' else args[0] + ('\n' if name == 'input' else '')
+        if text is None:
+            os.close(self.pipe[1])
+            self.pipe = (self.pipe[0], None)
+        else:
+            os.write(self.pipe[1], text.encode('utf-8'))
+
+    def comments(self, args):
+        """comments [<machine>] [formal|informal|all]: the comments kept for the application."""
+        kinds = {'formal': True, 'informal': False, 'all': None}
+        kind = kinds[args[-1]] if args and args[-1] in kinds else True
+        machine = args[0] if args and args[0] not in kinds else None
+        for comment, body in self.dispatcher.comments(machine, kind):
+            self.write('= {}: {!r}'.format(comment, body))
+
+    def describe(self, ctype):
+        """describe <type>: the declared API of a component type."""
+        api = hsmd.describe(hsmd_components.find(ctype))
+        for key in ('signals', 'methods', 'variables'):
+            self.write('= {} {}'.format(key, api[key]))
+
+    def close(self):
+        """Close the input pipe at the end of the scenario."""
+        if self.pipe is not None:
+            self.pipe[0].close()
+            if self.pipe[1] is not None:
+                os.close(self.pipe[1])
+            self.pipe = None
 
     def load(self, args):
         """load <file> [machines=a,b] [period=ms]: the document."""
@@ -187,10 +235,10 @@ class Scenario:
             self.load(args)
         elif name == 'build':
             self.build(args)
+        elif name in INPUT_COMMANDS:
+            self.feed(name, args)
         elif name == 'describe':
-            api = hsmd.describe(hsmd_components.find(args[0]))
-            for key in ('signals', 'methods', 'variables'):
-                self.write('= {} {}'.format(key, api[key]))
+            self.describe(args[0])
         elif name == 'let':
             self.names[args[0]] = parse_value(args[1])
         elif name == 'start':
@@ -215,11 +263,7 @@ class Scenario:
         elif name == 'finished':
             self.write('= ' + str(dispatcher.finished(*args)))
         elif name == 'comments':
-            kinds = {'formal': True, 'informal': False, 'all': None}
-            kind = kinds[args[-1]] if args and args[-1] in kinds else True
-            machine = args[0] if args and args[0] not in kinds else None
-            for comment, body in dispatcher.comments(machine, kind):
-                self.write('= {}: {!r}'.format(comment, body))
+            self.comments(args)
         elif name == 'stopped':
             self.write('= ' + str(dispatcher.stopped))
         elif name == 'snapshot':
@@ -252,6 +296,7 @@ class Scenario:
                     self.write('! {}: {}'.format(type(e).__name__, e))
                 else:
                     self.write('! no error')
+        self.close()
         return '\n'.join(self.lines) + '\n'
 
 

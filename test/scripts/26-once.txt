@@ -1,0 +1,16 @@
+# Timer.once: a single TIMEOUT, then disabled; start() makes the timer periodic again
+load 26-platform.graphml
+start
+send ONCE
+clock 100
+tick
+clock 200
+tick
+snapshot
+send START
+clock 100
+tick
+clock 100
+tick
+output
+describe Timer

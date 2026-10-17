@@ -1,0 +1,30 @@
+# the Clock from 2026-06-15 08:59:00, a Monday, in the local time
+load 26-platform.graphml
+start
+send SHOW
+send ALARM9
+clock 59000
+tick
+clock 1000
+tick
+# the next day at 09:00
+clock 86400000
+tick
+# a late tick rings once, the next ring is the next 09:00
+clock 172800000
+tick
+send SHOW
+# every hour at hh:00:00
+send HOURLY
+clock 3600000
+tick
+clock 1800000
+tick
+clock 1800000
+tick
+snapshot
+send CANCEL
+clock 3600000
+tick
+output
+describe Clock

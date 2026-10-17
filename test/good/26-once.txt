@@ -1,0 +1,52 @@
+> load 26-platform.graphml
+> start
+  fire P init-run
+  enter P run
+> send ONCE
+  post ONCE 0
+  event ONCE
+  fire P run#1
+  outcome P fired run#1
+= ONCE fired run#1
+> clock 100
+> tick
+  post t.TIMEOUT 0 P
+  event t.TIMEOUT
+  fire P run#3
+  print log timeout, enabled False
+  outcome P fired run#3
+= t.TIMEOUT fired run#3
+> clock 200
+> tick
+> snapshot
+= {'version': 2, 'machines': {'P': {'active': 'run', 'finished': False, 'history': {}}}, 'queue': [], 'completions': [], 'deferred': {'P': []}, 'components': {'shared': {'k': None}, 'local': {'P': {'log': None, 't': {'interval': 100, 'enabled': False, 'remaining': 0, 'once': True}, 'c': {'alarm': None}}}}}
+> send START
+  post START 0
+  event START
+  fire P run#2
+  outcome P fired run#2
+= START fired run#2
+> clock 100
+> tick
+  post t.TIMEOUT 0 P
+  event t.TIMEOUT
+  fire P run#3
+  print log timeout, enabled True
+  outcome P fired run#3
+= t.TIMEOUT fired run#3
+> clock 100
+> tick
+  post t.TIMEOUT 0 P
+  event t.TIMEOUT
+  fire P run#3
+  print log timeout, enabled True
+  outcome P fired run#3
+= t.TIMEOUT fired run#3
+> output
+| timeout, enabled False
+| timeout, enabled True
+| timeout, enabled True
+> describe Timer
+= signals {'TIMEOUT': ()}
+= methods {'disable': [], 'enable': [], 'once': ['interval'], 'reset': [], 'start': ['interval']}
+= variables ['interval', 'enabled', 'difference']

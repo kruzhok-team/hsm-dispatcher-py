@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <data key="gFormat">Cyberiada-GraphML-1.0</data>
+  <key id="gFormat" for="graphml" attr.name="format" attr.type="string"/>
+  <key id="dName" for="graph" attr.name="name" attr.type="string"/>
+  <key id="dName" for="node" attr.name="name" attr.type="string"/>
+  <key id="dStateMachine" for="graph" attr.name="stateMachine" attr.type="string"/>
+  <key id="dNote" for="node" attr.name="note" attr.type="string"/>
+  <key id="dVertex" for="node" attr.name="vertex" attr.type="string"/>
+  <key id="dData" for="node" attr.name="data" attr.type="string"/>
+  <graph id="P" edgedefault="directed">
+    <data key="dStateMachine"/>
+    <data key="dName">Platform</data>
+    <node id="nMeta">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_META</data>
+      <data key="dData">standardVersion/ 1.0</data>
+    </node>
+    <node id="c_log">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT log</data>
+      <data key="dData">type/ Log</data>
+    </node>
+    <node id="c_t">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT t</data>
+      <data key="dData">type/ Timer</data>
+    </node>
+    <node id="c_c">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT c</data>
+      <data key="dData">type/ Clock</data>
+    </node>
+    <node id="c_k">
+      <data key="dNote">formal</data>
+      <data key="dName">CGML_COMPONENT k</data>
+      <data key="dData">type/ Console</data>
+    </node>
+    <node id="init">
+      <data key="dVertex">initial</data>
+    </node>
+    <node id="run">
+      <data key="dName">Run</data>
+      <data key="dData">ONCE/
+t.once(100)
+
+START/
+t.start(100)
+
+t.TIMEOUT/
+log.print('timeout, enabled', t.enabled)
+
+ALARM9/
+c.alarm(9)
+
+HOURLY/
+c.alarm()
+
+CANCEL/
+c.cancel()
+
+c.ALARM/
+log.print('alarm at', c.now.strftime('%Y-%m-%d %H:%M:%S'))
+
+SHOW/
+log.print(c.hour, c.minute, c.second, c.weekday)
+
+k.LINE/
+log.print('line', repr(event.text), repr(k.last))
+
+k.EOF/
+log.print('eof')</data>
+    </node>
+    <edge id="init-run" source="init" target="run"/>
+  </graph>
+</graphml>

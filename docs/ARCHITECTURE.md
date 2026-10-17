@@ -1,6 +1,6 @@
 # The Python HSM Dispatcher Architecture
 
-Document version: 0.8 (2026-10-17)
+Document version: 0.9 (2026-10-17)
 
 The dispatcher executes Hierarchical State Machine (HSM) diagrams at run
 time. The diagrams are stored in the CyberiadaML-GraphML format (CGML,
@@ -394,9 +394,29 @@ describe(Timer) = {'methods': {'start': ['interval'], 'reset': [], 'enable': [],
                    'signals': {'TIMEOUT': ()}}
 ```
 
-The standard types: `Timer` (see Time) and `Log` (`print(...)`, no signals).
+The standard types, exported by `hsmd`:
+
+| Type | Members | Signals |
+|---|---|---|
+| `Timer` | `start(interval)`, `once(interval)`, `reset()`, `enable()`, `disable()`; `interval`, `enabled`, `difference` | `TIMEOUT` |
+| `Log` | `print(...)` | |
+| `Clock` | `alarm(hour=None, minute=0, second=0)`, `cancel()`; `now`, `hour`, `minute`, `second`, `weekday` | `ALARM` |
+| `Console` | `last` | `LINE(text)`, `EOF` |
+
 Only the types that raise events or need the dispatcher belong to it: a
 counter, an array, a random number are plain Python in the text.
+
+### The console
+
+`Console` turns the input of the dispatcher (`input`, the standard input
+by default) into events: `LINE` for every line, its text without the
+newline in `event.text`, then `EOF` once after the last line (a last line
+without a newline included); `last` is the last line read, which is ahead
+of the event when one `tick()` reads several lines. `tick()` polls the input without blocking
+and without a thread: `select` and `os.read` on POSIX, the keyboard of the
+console with `msvcrt` on Windows, where a piped input is not supported. The
+text is UTF-8. A console is shared by the machines of the document: there is
+one input. It has no snapshot.
 
 ### Visibility
 
@@ -442,6 +462,7 @@ dispatcher provides the same one:
 |---|---|---|
 | `TIMEOUT` | signal | the interval has passed; repeats every interval |
 | `start(interval)` | method | start the timer, the interval is in milliseconds |
+| `once(interval)` | method | one `TIMEOUT` after the interval, then the timer is disabled; `start()` makes it periodic again |
 | `reset()` | method | begin the count again |
 | `enable()`, `disable()` | methods | resume and stop the timer |
 | `difference` | variable | the time left before the next `TIMEOUT` |
@@ -456,6 +477,26 @@ The timer counts in whole milliseconds. It raises one `TIMEOUT` in a
 `tick()` at most and counts the next interval from that tick, so a late
 `tick()` does not produce a burst. `enable()` and `reset()` start the count
 again; `disable()` keeps the time left in `difference`.
+
+### The clock
+
+`Clock` follows the calendar time of the dispatcher (`calendar`, a function
+returning the seconds of the epoch like `time.time`, its default), in the
+local time: `now` (a `datetime`), `hour`, `minute`, `second`, `weekday` (0
+for Monday). `alarm(hour=None, minute=0, second=0)` makes it raise `ALARM`
+at every local time with the given fields, `None` for any value:
+
+| Call | Rings |
+|---|---|
+| `alarm(9)` | every day at 09:00:00 |
+| `alarm(9, 30)` | every day at 09:30:00 |
+| `alarm()` | every hour at hh:00:00 |
+| `alarm(minute=None)` | every minute at hh:mm:00 |
+
+`cancel()` stops it. A late `tick()` raises one `ALARM` and the next one
+is the next matching time after it; the local time follows the changes of
+the daylight saving time. The snapshot keeps the alarm, the next ring is
+found again from the restored calendar time.
 
 ### The time events
 
@@ -619,11 +660,13 @@ natural moment is after `run()`, when the queue is empty.
 `Dispatcher` (`hsmd.py`):
 
 * `Dispatcher(source, clock=None, trace=None, output=None, machines=None,
-  namespace=None, period=None)` - load the document (`source` is its path)
-  or build the machines written in Python (a `Machine` or a list of them),
-  create the components; `machines` names the ones to run (all without it),
-  `namespace` is the dictionary the text of the machines runs in (a new one
-  without it), `period` (seconds) makes `tick()` post the time events;
+  namespace=None, period=None, calendar=None, input=None)` - load the
+  document (`source` is its path) or build the machines written in Python
+  (a `Machine` or a list of them), create the components; `machines` names
+  the ones to run (all without it), `namespace` is the dictionary the text
+  of the machines runs in (a new one without it), `period` (seconds) makes
+  `tick()` post the time events, `calendar` is the calendar time of the
+  clocks (`time.time`), `input` the stream of the consoles (`sys.stdin`);
 * `start()` - enter the initial configuration of every machine, process
   the queue, return the outcomes;
 * `post(name, priority=0, machine=None, **parameters)` - put an event into

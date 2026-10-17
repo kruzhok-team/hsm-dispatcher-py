@@ -1,0 +1,96 @@
+> load 26-platform.graphml
+> start
+  fire P init-run
+  enter P run
+> send SHOW
+  post SHOW 0
+  event SHOW
+  fire P run#8
+  print log 8 59 0 0
+  outcome P fired run#8
+= SHOW fired run#8
+> send ALARM9
+  post ALARM9 0
+  event ALARM9
+  fire P run#4
+  outcome P fired run#4
+= ALARM9 fired run#4
+> clock 59000
+> tick
+> clock 1000
+> tick
+  post c.ALARM 0 P
+  event c.ALARM
+  fire P run#7
+  print log alarm at 2026-06-15 09:00:00
+  outcome P fired run#7
+= c.ALARM fired run#7
+> clock 86400000
+> tick
+  post c.ALARM 0 P
+  event c.ALARM
+  fire P run#7
+  print log alarm at 2026-06-16 09:00:00
+  outcome P fired run#7
+= c.ALARM fired run#7
+> clock 172800000
+> tick
+  post c.ALARM 0 P
+  event c.ALARM
+  fire P run#7
+  print log alarm at 2026-06-18 09:00:00
+  outcome P fired run#7
+= c.ALARM fired run#7
+> send SHOW
+  post SHOW 0
+  event SHOW
+  fire P run#8
+  print log 9 0 0 3
+  outcome P fired run#8
+= SHOW fired run#8
+> send HOURLY
+  post HOURLY 0
+  event HOURLY
+  fire P run#5
+  outcome P fired run#5
+= HOURLY fired run#5
+> clock 3600000
+> tick
+  post c.ALARM 0 P
+  event c.ALARM
+  fire P run#7
+  print log alarm at 2026-06-18 10:00:00
+  outcome P fired run#7
+= c.ALARM fired run#7
+> clock 1800000
+> tick
+> clock 1800000
+> tick
+  post c.ALARM 0 P
+  event c.ALARM
+  fire P run#7
+  print log alarm at 2026-06-18 11:00:00
+  outcome P fired run#7
+= c.ALARM fired run#7
+> snapshot
+= {'version': 2, 'machines': {'P': {'active': 'run', 'finished': False, 'history': {}}}, 'queue': [], 'completions': [], 'deferred': {'P': []}, 'components': {'shared': {'k': None}, 'local': {'P': {'log': None, 't': {'interval': 0, 'enabled': False, 'remaining': 0, 'once': False}, 'c': {'alarm': [None, 0, 0]}}}}}
+> send CANCEL
+  post CANCEL 0
+  event CANCEL
+  fire P run#6
+  outcome P fired run#6
+= CANCEL fired run#6
+> clock 3600000
+> tick
+> output
+| 8 59 0 0
+| alarm at 2026-06-15 09:00:00
+| alarm at 2026-06-16 09:00:00
+| alarm at 2026-06-18 09:00:00
+| 9 0 0 3
+| alarm at 2026-06-18 10:00:00
+| alarm at 2026-06-18 11:00:00
+> describe Clock
+= signals {'ALARM': ()}
+= methods {'alarm': ['hour', 'minute', 'second'], 'cancel': []}
+= variables ['now', 'hour', 'minute', 'second', 'weekday']

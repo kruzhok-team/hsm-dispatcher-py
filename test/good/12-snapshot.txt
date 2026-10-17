@@ -12,7 +12,7 @@
 > post INC
   post INC 0
 > snapshot
-= {'version': 2, 'machines': {'G': {'active': 'a', 'finished': False, 'history': {}}}, 'queue': [{'name': 'INC', 'priority': 0, 'parameters': {}, 'machine': None}], 'completions': [], 'deferred': {'G': []}, 'components': {'shared': {}, 'local': {'G': {'log': None, 'n': 1, 't': {'interval': 100, 'enabled': True, 'remaining': 60}}}}}
+= {'version': 2, 'machines': {'G': {'active': 'a', 'finished': False, 'history': {}}}, 'queue': [{'name': 'INC', 'priority': 0, 'parameters': {}, 'machine': None}], 'completions': [], 'deferred': {'G': []}, 'components': {'shared': {}, 'local': {'G': {'log': None, 'n': 1, 't': {'interval': 100, 'enabled': True, 'remaining': 60, 'once': False}}}}}
 > load 12-snapshot.graphml
 > restore
   post INC 0

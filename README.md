@@ -66,8 +66,12 @@ dispatcher.tick()                    # call it regularly: the timers
 
 The diagram declares its components with `CGML_COMPONENT <id>` comments and
 calls them from the action text, which is Python. The standard component
-types are `Timer` and `Log`; a type declares its `signals` and `variables`,
-and `hsmd.describe(cls)` gives them with the methods. With a period
+types, exported by `hsmd`, are `Timer` (periodic, or `once()`), `Log`,
+`Clock` (the local time, `alarm(9)` raises `ALARM` every day at 09:00) and
+`Console` (`LINE` for every line of the input, then `EOF`); a type declares
+its `signals` and `variables`, and `hsmd.describe(cls)` gives them with the
+methods. `calendar=` and `input=` give the clocks and the consoles their
+time and their stream. With a period
 (`Dispatcher(..., period=0.1)`), `tick()` posts the time events the
 machines use: `TIME_TICK` every period, `TIME_TICK_1S`, `TIME_TICK_1M` and
 `TIME_TICK_1H`. A component is local to its machine or shared
