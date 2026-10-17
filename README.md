@@ -13,6 +13,10 @@ documentation -- under the GNU Free Documentation License (version 1.3).
 
 The documentation is located in the `docs` directory and contains:
 
+* The interface - `API.md` (`API-ru.md` in Russian): for the authors of the
+  programs, the diagrams and the component types - the `Dispatcher`, the code
+  of a diagram, a machine written in Python, the standard components, the
+  time events, a component type of one's own, the errors
 * The architecture - `ARCHITECTURE.md`: the usage requirements, the
   references to the standards PNST 984-2024 and PNST 1044-2025, the core
   specifications of the dispatcher

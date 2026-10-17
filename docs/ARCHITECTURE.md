@@ -1,6 +1,6 @@
 # The Python HSM Dispatcher Architecture
 
-Document version: 0.9 (2026-10-17)
+Document version: 0.10 (2026-10-17)
 
 The dispatcher executes Hierarchical State Machine (HSM) diagrams at run
 time. The diagrams are stored in the CyberiadaML-GraphML format (CGML,
@@ -657,65 +657,20 @@ natural moment is after `run()`, when the queue is empty.
 
 ## Interface
 
-`Dispatcher` (`hsmd.py`):
+The interface is specified for the authors of the programs, the diagrams
+and the component types in `API.md` (`API-ru.md` in Russian): the
+`Dispatcher` with its parameters and methods, `Event` and `Outcome`, the
+trace, the snapshot, the code of a diagram, the declarations of a machine
+written in Python, the standard components, the time events, a component
+type of one's own and the errors. `hsmd` exports:
 
-* `Dispatcher(source, clock=None, trace=None, output=None, machines=None,
-  namespace=None, period=None, calendar=None, input=None)` - load the
-  document (`source` is its path) or build the machines written in Python
-  (a `Machine` or a list of them), create the components; `machines` names
-  the ones to run (all without it), `namespace` is the dictionary the text
-  of the machines runs in (a new one without it), `period` (seconds) makes
-  `tick()` post the time events, `calendar` is the calendar time of the
-  clocks (`time.time`), `input` the stream of the consoles (`sys.stdin`);
-* `start()` - enter the initial configuration of every machine, process
-  the queue, return the outcomes;
-* `post(name, priority=0, machine=None, **parameters)` - put an event into
-  the queue, for every machine or for the named one;
-* `run()` - process the queue until it is empty, return the outcomes;
-* `send(name, **parameters)` - `post()` and `run()`, return the outcome of
-  the event;
-* `tick()` - post the due time events, let the components check the
-  clock, then `run()`;
-* `states(machine=None)` - the active states;
-* `finished(machine=None)` - whether the machine has reached its final
-  state;
-* `triggers(machine=None)` - the trigger names of the transitions that can
-  be selected in the current configuration, the guards not evaluated;
-* `comments(machine=None, formal=True)` - the comments the dispatcher does
-  not interpret, as `(name, body)` pairs in the document order: the formal
-  ones, the informal ones (`False`, the name is empty) or both (`None`);
-* `snapshot()`, `restore(data)`;
-* `stopped` - set after an error.
-
-A machine is named by its identifier or its name; without the argument the
-first machine of the document is meant.
-
-`Event`: `name`, `priority`, `parameters`, `machine` (the addressee, `None`
-for every machine); the parameters are attributes too. `Outcome`: `event`,
-`status`, `transitions`, and `results` - the status and the transitions of
-each machine.
-
-The errors are subclasses of `DispatcherError`: `DocumentError` (the
-document cannot be loaded), `ActionError` (the text has failed; `where`,
-`line`, `error`), `ExecutionError` (the diagram cannot be executed
-further), `StoppedError` (the dispatcher is stopped).
-
-`Component` (`hsmd_components.py`):
-
-* `register(type, cls)` - add a component type to the registry;
-* `Component(ident, dispatcher, **parameters)` - the constructor a type
-  keeps; `id`, `dispatcher`, `parameters`;
-* `Component.priority` - the default priority of the type;
-* `Component.signals` - signal -> the names of its parameters, `None` when
-  not declared; `Component.variables` - the names the text reads;
-* `describe(cls)` - the methods, the variables and the signals of a type;
-* `TIME_EVENTS` - the time events of `tick()`: `(name, seconds)`, `None`
-  for the period of the dispatcher;
-* `Component.shared` - the default visibility of the type; `machine` - the
-  owning machine of a local instance, `None` for a shared one;
-* `Component.signal(name, **parameters)` - raise the event `<id>.<name>`;
-* `Component.tick(now)` - called from `Dispatcher.tick()`;
-* `Component.snapshot()`, `Component.restore(data)`.
+```
+Dispatcher  Event  Outcome  FIRED  REJECTED  DROPPED  DEFERRED  TIME_EVENTS
+Machine  State  Initial  Final  Terminate  Choice  History  EntryPoint  ExitPoint
+On  Transition  Declaration  ELSE
+Component  register  describe  Timer  Log  Clock  Console
+DispatcherError  DocumentError  ActionError  ExecutionError  StoppedError
+```
 
 ## Stages
 

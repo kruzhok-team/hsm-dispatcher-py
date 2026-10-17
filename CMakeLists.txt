@@ -24,6 +24,8 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ChangeLog.md
               ${CMAKE_CURRENT_SOURCE_DIR}/README.md
               ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE
               ${CMAKE_CURRENT_SOURCE_DIR}/docs/ARCHITECTURE.md
+              ${CMAKE_CURRENT_SOURCE_DIR}/docs/API.md
+              ${CMAKE_CURRENT_SOURCE_DIR}/docs/API-ru.md
         DESTINATION ${DOC_INSTALL_DIR})
 
 # the tests need the CyberiadaML binding in this Python

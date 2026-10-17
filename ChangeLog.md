@@ -26,5 +26,6 @@ Added:
   `describe()`) and the time events of `tick()` with a period
   (`TIME_TICK`, `TIME_TICK_1S`, `TIME_TICK_1M`, `TIME_TICK_1H`);
 - the scenario tests (30 scenarios, also run through the declarations with
-  `--built`) and the architecture document;
+  `--built`), the architecture document and the interface specification
+  (`docs/API.md`, `docs/API-ru.md`);
 - the pip installation and the Debian package.
