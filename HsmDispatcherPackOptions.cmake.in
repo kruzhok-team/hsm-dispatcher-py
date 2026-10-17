@@ -18,3 +18,9 @@ of PNST 984-2024: the event queue, the hierarchy, history, deferred and
 propagated events, submachine states, and Python components the action text
 of the diagram calls. The module hsmd.")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "python3 (>= 3.8), python3-libcyberiadamlpp (>= 1.0.7)")
+
+# a per-release build tags the version (e.g. 0.1.0+ubuntu2404)
+set(DISTRO_TAG "@DISTRO_TAG@")
+if(NOT DISTRO_TAG STREQUAL "")
+  set(CPACK_DEBIAN_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}+${DISTRO_TAG}")
+endif()

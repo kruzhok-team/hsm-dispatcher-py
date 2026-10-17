@@ -38,6 +38,9 @@ if(Python3_FOUND)
            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
 endif()
 
+# optional per-release suffix (e.g. ubuntu2404) for the package version: the
+# package is tested against that release's libraries and Python
+set(DISTRO_TAG "" CACHE STRING "distribution suffix appended to the package version")
 configure_file("${PROJECT_SOURCE_DIR}/HsmDispatcherPackOptions.cmake.in"
                "${PROJECT_BINARY_DIR}/HsmDispatcherPackOptions.cmake"
                @ONLY)
