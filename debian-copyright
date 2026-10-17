@@ -1,0 +1,24 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: hsm-dispatcher-py
+Upstream-Contact: Alexey Fedoseev <aleksey@fedoseev.net>
+Source: https://github.com/kruzhok-team/hsm-dispatcher-py
+
+Files: *
+Copyright: 2026 Alexey Fedoseev <aleksey@fedoseev.net>
+License: LGPL-3+
+
+License: LGPL-3+
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU Lesser General Public License as published by
+ the Free Software Foundation; either version 3 of the License, or (at your
+ option) any later version.
+ .
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ for more details.
+ .
+ On Debian systems, the complete text of the GNU Lesser General Public
+ License version 3 can be found in "/usr/share/common-licenses/LGPL-3", and
+ the GNU General Public License version 3 it supplements in
+ "/usr/share/common-licenses/GPL-3".

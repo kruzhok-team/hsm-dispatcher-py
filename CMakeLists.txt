@@ -28,6 +28,10 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ChangeLog.md
               ${CMAKE_CURRENT_SOURCE_DIR}/docs/API-ru.md
         DESTINATION ${DOC_INSTALL_DIR})
 
+# the machine-readable (DEP-5) copyright, where the Debian policy wants it
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/debian-copyright
+        DESTINATION ${DOC_INSTALL_DIR} RENAME copyright)
+
 # the tests need the CyberiadaML binding in this Python
 # (-DPython3_EXECUTABLE=... selects another one)
 find_package(Python3 3.8 COMPONENTS Interpreter)
