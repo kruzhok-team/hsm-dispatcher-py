@@ -10,8 +10,11 @@ supplies the components the diagram works with, and feeds events.
 
 The dispatcher is not a code generator. It has no event loop and no threads
 of its own, and it contains nothing specific to a particular application.
-It depends on the `CyberiadaML` binding (`libcyberiadamlpp-py`) and on
-the Python 3 standard library only.
+It depends on the `CyberiadaML` module and on the Python 3 standard library
+only. The module is the binding of `libcyberiadamlpp-py` when it is installed,
+else the pure-Python interface of `cyberiadaml-py` (`cyberiadaml_py.cml`, the
+same names and results): `hsmd_reader.py` chooses it, and `HSMD_BACKEND=cml`
+runs the scenario tests on it beside an installed binding.
 
 ## Usage requirements
 

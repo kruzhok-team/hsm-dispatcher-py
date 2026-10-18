@@ -36,6 +36,12 @@ import time
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(TEST_DIR))
 
+# HSMD_BACKEND=cml runs the scenarios on the pure-Python interface even
+# where the binding is installed
+if os.environ.get('HSMD_BACKEND') == 'cml':
+    from cyberiadaml_py import cml  # pylint: disable=wrong-import-position
+    sys.modules['CyberiadaML'] = cml
+
 import hsmd  # pylint: disable=wrong-import-position
 import hsmd_components  # pylint: disable=wrong-import-position
 

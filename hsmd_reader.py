@@ -22,7 +22,12 @@
 
 import os
 
-import CyberiadaML
+# the CyberiadaML module: the binding of libcyberiadamlpp-py when installed,
+# else the pure-Python interface of cyberiadaml-py (1.8 and newer)
+try:
+    import CyberiadaML
+except ImportError:
+    from cyberiadaml_py import cml as CyberiadaML
 
 from hsmd_model import (DocumentError, STATE, COMPOSITE, INITIAL, FINAL, CHOICE, SHALLOW,
                         DEEP, ENTRY, EXIT, TERMINATE, POINT_KINDS, EVENT_ANY, EVENT_UNKNOWN,

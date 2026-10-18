@@ -14,8 +14,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 
-# the CyberiadaML module of libcyberiadamlpp-py is required as well; it is
-# not a pip package and is installed by its own build
+# the CyberiadaML module: the binding of libcyberiadamlpp-py (its own build
+# or package) when installed, else the pure-Python interface of cyberiadaml-py
+dependencies = ["cyberiadaml-py>=1.8; python_version >= '3.10'"]
 
 [tool.setuptools]
 py-modules = ["hsmd", "hsmd_model", "hsmd_build", "hsmd_reader", "hsmd_actions", "hsmd_step",
