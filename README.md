@@ -26,8 +26,8 @@ The documentation is located in the `docs` directory and contains:
 The dispatcher needs the `CyberiadaML` module: the binding of
 `libcyberiadamlpp-py` with its libraries (`libhtreegeom`, `libcyberiadaml`,
 `libcyberiadamlpp`), each installed by its own README, or, when it is not
-installed, the pure-Python interface of `cyberiadaml-py` 1.8+ (Python 3.10+);
-check the binding with `python3 -c "import CyberiadaML"`.
+installed, the pure-Python interface of `cyberiadaml-py` 1.8+; check the
+binding with `python3 -c "import CyberiadaML"`.
 
 The Debian package:
 
@@ -39,8 +39,8 @@ The Debian package:
 `python3-libcyberiadamlpp`.
 
 With pip (a virtual environment, the user site, Windows, macOS) the
-dispatcher needs no binary build: pip installs cyberiadaml-py with it (Python
-3.10+), and the dispatcher uses the binding only when it is installed:
+dispatcher needs no binary build: pip installs cyberiadaml-py with it, and the
+dispatcher uses the binding only when it is installed:
 
     python3 -m venv --system-site-packages venv && . venv/bin/activate
     pip install /path/to/hsm-dispatcher-py
@@ -132,6 +132,6 @@ point the environment to a current build:
 
 * python3 (version 3.8+)
 * the `CyberiadaML` module: libcyberiadamlpp-py (version 1.0.7+, with its
-  dependencies) or, when it is not installed, cyberiadaml-py (version 1.8+,
-  Python 3.10+), its pure-Python interface
+  dependencies) or, when it is not installed, cyberiadaml-py (version 1.8+),
+  its pure-Python interface
 * cmake (version 3.16+) - for the Debian package

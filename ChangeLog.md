@@ -25,4 +25,6 @@ Added:
 - the scenario tests (30 scenarios, also run through the declarations with
   `--built`), the architecture document and the interface specification
   (`docs/API.md`, `docs/API-ru.md`);
-- the pip installation and the Debian package.
+- the pip installation and the Debian package; the `CyberiadaML` module from
+  the binding or from the pure-Python interface of cyberiadaml-py 1.8
+  (Python 3.8+), the package accepts either.

@@ -17,7 +17,7 @@ Executes hierarchical state machine diagrams at run time with the semantics
 of PNST 984-2024: the event queue, the hierarchy, history, deferred and
 propagated events, submachine states, and Python components the action text
 of the diagram calls. The module hsmd.")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "python3 (>= 3.8), python3-libcyberiadamlpp (>= 1.0.7)")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "python3 (>= 3.8), python3-libcyberiadamlpp (>= 1.0.7) | python3-cyberiadaml (>= 1.8.0)")
 
 # a per-release build tags the version (e.g. 0.1.0+ubuntu2404)
 set(DISTRO_TAG "@DISTRO_TAG@")
