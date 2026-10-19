@@ -40,7 +40,9 @@ The Debian package:
 
 With pip (a virtual environment, the user site, Windows, macOS) the
 dispatcher needs no binary build: pip installs cyberiadaml-py with it, and the
-dispatcher uses the binding only when it is installed:
+dispatcher uses the binding only when it is installed (on Windows before
+Python 3.10 pip does not install cyberiadaml-py, which needs pydantic there;
+that case takes the binding):
 
     python3 -m venv --system-site-packages venv && . venv/bin/activate
     pip install /path/to/hsm-dispatcher-py

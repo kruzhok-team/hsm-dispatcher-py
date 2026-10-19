@@ -27,4 +27,5 @@ Added:
   (`docs/API.md`, `docs/API-ru.md`);
 - the pip installation and the Debian package; the `CyberiadaML` module from
   the binding or from the pure-Python interface of cyberiadaml-py 1.8
-  (Python 3.8+), the package accepts either.
+  (Python 3.8+; not installed by pip on Windows before 3.10, where the
+  binding serves), the package accepts either.
