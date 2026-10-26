@@ -1,12 +1,13 @@
 # The Python HSM Dispatcher Interface Specification
 
-Document version: 0.1 (2026-10-17)
+Document version: 0.2 (2026-10-26)
 
 This document is for the authors of the programs that run state machines on
 the dispatcher, of the diagrams those programs run, and of the component
 types. It specifies everything they use: the `Dispatcher`, the code of a
 diagram, a machine written in Python, the standard components, the time
-events, a component type of one's own and the errors. The execution rules
+events, a component type of one's own, the errors and the session that serves
+a machine to the editor step by step. The execution rules
 and their reasons are in `ARCHITECTURE.md`; hsm-to-python generates programs
 that use this interface.
 
@@ -71,7 +72,7 @@ while not dispatcher.finished():
     time.sleep(0.1)
 ```
 
-### `Dispatcher(source, clock=None, trace=None, output=None, machines=None, namespace=None, period=None, calendar=None, input=None)`
+### `Dispatcher(source, clock=None, trace=None, output=None, machines=None, namespace=None, period=None, calendar=None, input=None, timers=True)`
 
 | Parameter | Meaning |
 |---|---|
@@ -84,6 +85,7 @@ while not dispatcher.finished():
 | `period` | seconds: `tick()` posts the time events; none without it |
 | `calendar` | a function returning the calendar time, the seconds of the epoch, for `Clock`; `time.time` |
 | `input` | the stream of `Console`; `sys.stdin` |
+| `timers` | `False`: no event comes from the time - `tick()` posts no time events, `Timer` and `Clock` raise no signals; a recorded log brings them (see Sessions); `True` |
 
 The constructor loads the document (or builds the declared machines),
 checks them, creates the components and compiles the code; a problem is a
@@ -99,7 +101,8 @@ code of its machine as functions gives its own globals as the namespace:
 | `post(name, priority=0, machine=None, **parameters)` | the `Event` | puts an event into the queue, for every machine or for the named one |
 | `run()` | the outcomes | processes the queue until it is empty |
 | `send(name, **parameters)` | the `Outcome` of the event | `post()` and `run()` |
-| `tick()` | the outcomes | posts the due time events, lets every component check the clock, `run()` |
+| `step()` | the `Outcome`, or `None` with the queue empty | takes one event from the queue, in the order of `run()`, and processes it |
+| `tick(run=True)` | the outcomes | posts the due time events, lets every component check the clock, `run()`; with `run=False` the events stay in the queue for `step()` |
 | `states(machine=None)` | a list of state identifiers | the active states, the outermost first |
 | `finished(machine=None)` | `bool` | whether the machine has reached its final state |
 | `triggers(machine=None)` | a list of names | the triggers of the active states, the guards not evaluated |
@@ -428,3 +431,113 @@ They are subclasses of `hsmd.DispatcherError`. An error during a step
 stops the dispatcher: the configuration may be half changed, so every call
 raises `StoppedError` until `restore()`. A guard that fails is an error, not
 a false guard.
+
+## Sessions
+
+`hsmd_session` serves a machine to the CyberiadaPro editor. The editor marks
+the active states and the fired transitions on the diagram, and the user
+steps, runs, posts events and replays a stream. The protocol is the Sessions
+chapter of the editor's `PLUGIN-API.md`; this is a driven session with the
+async logic.
+
+```
+ CyberiadaPro             hsmd_session                  hsmd
+ ────────────             ────────────                  ────
+ control, event, ─stdin─▶ the virtual clock,  ────────▶ a Dispatcher from
+ input, save              the stream, the posts         make(**options)
+ marks, history, ◀stdout─ state, history, log ◀─ trace─ step(), tick(run=False),
+ the output tab           (Log, print: log)             states(), triggers()
+```
+
+```python
+import sys
+
+import hsmd
+import hsmd_session
+
+
+def make(**options):
+    return hsmd.Dispatcher('coffee.graphml', period=0.1, **options)
+
+
+sys.exit(hsmd_session.Session(make, period=0.1).serve())
+```
+
+| Member | Meaning |
+|---|---|
+| `Session(make, period)` | `make(**options)` returns a new `Dispatcher` built with the options given — `clock`, `calendar`, `trace`, `output`, `input`, `timers` — at the start and at every restart; `period` (seconds) is the step of the virtual clock |
+| `serve(reader=sys.stdin, writer=sys.stdout)` | runs the session until `shutdown` or the end of the input; returns the exit code, 0 |
+
+`python -m hsmd_session DOCUMENT [--period S] [--machines A,B]` serves a
+document as it is, with the code of the diagram in a new namespace.
+
+The answer to `initialize`:
+
+```json
+{"kind": "driven", "logic": "async", "steps": ["event", "input", "time"],
+ "speeds": [1, 10, 0], "events": ["..."], "stream": true, "save": true}
+```
+
+`events` are the `triggers()` of the active states.
+
+| Unit, message | The session does |
+|---|---|
+| step `event` | `step()`: one event from the queue; with the queue empty it advances the clock by `period` with `tick(run=False)`, queueing the stream items that fall due, until an event is queued, at most `IDLE_PERIODS` (1000) times, else the status is `waiting` |
+| step `input` | the next stream item: advances the clock to its time with `tick()` at every period, posts the item and `run()`; without a next item as `event` |
+| step `time` | advances the clock by `period` and `tick()` |
+| `run` | repeats `input` (`event` without a stream) until `pause`, the status `finished`, or at speed 0 the end of the stream or `IDLE_PERIODS` without events; at speed 1 the clock follows the wall clock, at N it runs N times faster |
+| `restart` | a new dispatcher from `make()`, the clock at 0, the stream from its first item, `start()` |
+| `event` | `post(name, **parameters)`, the values read as in the stream; handled by the next step |
+| `input` | reads the stream and restarts with it |
+| `save` | writes the stream items handled and the posted events with their times |
+
+* After every step the session sends `state`:
+  * `status`: `paused`, `running`, `waiting`, or `finished` when every
+    machine has finished or the dispatcher has stopped;
+  * `active`: the `states()` of every machine;
+  * `fired`: the `fire` records of the step;
+  * `events`: the `triggers()`;
+  * `time`, `position` and `queue`.
+* Every processed event is a `history` message: the name (empty for a
+  completion event), the parameters, the time, the origin (`input` for the
+  stream items, `user` for the posted events, `model` for the rest), the
+  outcome status and the fired transitions.
+* The ids are the document's. An internal transition `<state>#<n>` is
+  reported as `<state>`, and an element of an inlined submachine
+  `<state>/<identifier>` as `<state>`.
+* The `Log` messages and the prints of the code go out as `log`. `Console`
+  reads an empty input, because stdin is the channel.
+* An error stops the dispatcher. The session then sends a `state` `finished`
+  with the error in `text`, and a `log` with the level `error`; Restart
+  starts again.
+
+### The stream
+
+```
+# timers: model                       or recorded: Dispatcher(timers=False)
+0.000   POWER_ON                      seconds from the start
+0.512   button.CLICKED
++0.788  sensor.VALUE value=23.5       seconds after the previous item
+SHOW                                  no time: right after the previous item
+```
+
+* One item per line; `#` starts a comment; empty lines are skipped.
+* A time is one of:
+  * seconds from the start;
+  * `+` seconds after the previous item;
+  * an ISO 8601 date and time, counted from the first one; the `calendar` of
+    the dispatcher then starts at it, so `Clock` sees the recorded time.
+
+  The absolute times of one stream are all seconds or all ISO times, and they
+  never decrease.
+* A parameter value is a Python literal (`5`, `2.5`, `'a b'`, `True`) or else
+  the text, as in the scenarios of the tests.
+* `# timers: recorded` makes the session build the dispatcher with
+  `timers=False`: the timeouts and the time events come from the stream. The
+  default is `model`.
+
+| Member of `hsmd_stream` | Meaning |
+|---|---|
+| `read(text)` | a `Stream`: `items` and `timers` (`'model'` or `'recorded'`); a bad line is a `StreamError` with `line` |
+| `write(stream)` | the text: the times in seconds, three decimals |
+| `Item` | `time` (seconds, `None` when untimed), `name`, `parameters`, `line` |

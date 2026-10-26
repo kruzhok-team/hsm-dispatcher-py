@@ -1,6 +1,6 @@
 # The Python HSM Dispatcher Architecture
 
-Document version: 0.10 (2026-10-17)
+Document version: 0.11 (2026-10-26)
 
 The dispatcher executes Hierarchical State Machine (HSM) diagrams at run
 time. The diagrams are stored in the CyberiadaML-GraphML format (CGML,
@@ -111,6 +111,8 @@ The modules are plain files in the repository root; there is no package.
 | `hsmd_step.py` | The step of one machine for one event. Keeps the active configuration. |
 | `hsmd_actions.py` | Compiles and runs the action and guard text. |
 | `hsmd_components.py` | The `Component` base class, the registry of types, the standard types `Timer` and `Log`. |
+| `hsmd_stream.py` | The stream of timed events: reads and writes its text format. |
+| `hsmd_session.py` | The editor session: the protocol over stdin and stdout, the virtual clock, the replay of a stream. Imports `hsmd` and `hsmd_stream`. |
 
 The application talks to the `Dispatcher` only. The text of the diagram
 calls the components; the components answer with signals, which return to
@@ -658,6 +660,59 @@ in a new one with the same document, and clears the stopped state. The
 application decides where the snapshot is stored and when it is taken; the
 natural moment is after `run()`, when the queue is empty.
 
+## Sessions
+
+The editor runs a machine step by step through a session (the editor's
+`PLUGINS.md`, Level 2). It shows the active states and the fired transitions,
+and the user steps, runs, posts events and replays a recorded stream.
+`hsmd_session.py` serves the protocol over stdin and stdout for any dispatcher an
+application makes; hsm-to-python makes one from its generated program.
+
+```
+  the editor               hsmd_session.py                    hsmd.py
+ +-----------------+ JSON +-----------------------------+    +-----------------+
+ | marks, history  | lines| the virtual clock           |    | Dispatcher      |
+ | Step, Run,      | ---> | the stream (hsmd_stream.py) | -> | step()          |
+ | Pause, events,  | <--- | the events the user posts   |    | tick(run=False) |
+ | stream, Save Log|      | trace -> state, history     | <- | trace, states() |
+ +-----------------+      +-----------------------------+    +-----------------+
+                                 | make(**options): at the start and on Restart
+                                 v
+                            the application: Dispatcher(..., clock, calendar,
+                            trace, output, input, timers)
+```
+
+| Addition to the dispatcher | Why |
+|---|---|
+| `step()` | one event per Step: `run()` would hide the order of the queue |
+| `tick(run=False)` | the due time events and the timer signals are only queued, so each one is a step of its own |
+| `timers=False` | a recorded log brings the timeouts and the time events; the model must not raise them a second time |
+
+The session owns the time. `clock` returns the virtual seconds; the calendar is
+the wall time at the start, or the first ISO time of the stream, plus the
+virtual seconds. Step and replay never sleep; Run at speed 1 sleeps to follow
+the wall clock.
+
+```
+ the stream    0.000 POWER_ON        0.512 CLICKED                  1.300 VALUE
+ the clock  ---|---------------------|----------------|-------------|-------->
+               post, run()           post, run()      tick():       post, run()
+                                                      t1.TIMEOUT
+                                                      of the model
+```
+
+An `input` step advances the clock period by period with `tick()`, so the
+model's own timers and time events fire between the records at their times;
+then it posts the record and runs the queue. With `timers: recorded` the
+dispatcher is made with `timers=False`, and only the stream brings the events
+of the time.
+
+* The trace names the internal transitions `<state>#<n>` and the elements of an
+  inlined submachine `<state>/<id>`; the session reports the owning state,
+  because the editor knows only the elements of the document.
+* The session's stdin is the channel: the dispatcher gets an empty `input`, and
+  the `Log` messages and the prints go out as `log` messages.
+
 ## Interface
 
 The interface is specified for the authors of the programs, the diagrams
@@ -665,7 +720,8 @@ and the component types in `API.md` (`API-ru.md` in Russian): the
 `Dispatcher` with its parameters and methods, `Event` and `Outcome`, the
 trace, the snapshot, the code of a diagram, the declarations of a machine
 written in Python, the standard components, the time events, a component
-type of one's own and the errors. `hsmd` exports:
+type of one's own, the errors and the sessions (`hsmd_session`,
+`hsmd_stream`, imported on their own). `hsmd` exports:
 
 ```
 Dispatcher  Event  Outcome  FIRED  REJECTED  DROPPED  DEFERRED  TIME_EVENTS
@@ -682,6 +738,7 @@ DispatcherError  DocumentError  ActionError  ExecutionError  StoppedError
 | 1 (done) | simple and composite states with one region, initial and final pseudostates, choice, `entry/` and `exit/`, internal transitions, guards and `[else]`, transitions without a trigger, `transitionOrder`, `eventPropagation` with `propagate` and `block`, `ANY`, `UNKNOWN`, several machines, components, the Timer, the Log, priorities, outcomes, the trace, the snapshot |
 | 2 (done) | shallow and deep history, `defer`, entry and exit points, submachine states, terminate, the visibility of the components |
 | 3 | orthogonal regions and `do/` activities |
+| sessions (designed) | `step()`, `tick(run=False)`, `timers`, `hsmd_stream`, `hsmd_session` for the plugin sessions of the editor |
 
 Stage 3 needs the support of the regions and of the `do/` blocks in
 `libcyberiadamlpp` first: the library rejects both today.
