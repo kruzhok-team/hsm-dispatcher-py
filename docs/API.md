@@ -1,6 +1,6 @@
 # The Python HSM Dispatcher Interface Specification
 
-Document version: 0.2 (2026-10-26)
+Document version: 0.3 (2026-10-27)
 
 This document is for the authors of the programs that run state machines on
 the dispatcher, of the diagrams those programs run, and of the component
@@ -107,6 +107,8 @@ code of its machine as functions gives its own globals as the namespace:
 | `finished(machine=None)` | `bool` | whether the machine has reached its final state |
 | `triggers(machine=None)` | a list of names | the triggers of the active states, the guards not evaluated |
 | `comments(machine=None, formal=True)` | `(name, body)` pairs | the comments the dispatcher does not interpret: the formal ones, the informal ones (`False`, the name empty) or both (`None`) |
+| `machines()` | a list of identifiers | the started machines |
+| `queued()` | a list of `Event` | the pending events in the order `step()` takes them |
 | `snapshot()` | a dictionary of plain data | the execution state |
 | `restore(data)` | | continues from a snapshot, clears the stopped state |
 
@@ -410,6 +412,7 @@ threshold/ 20
 | `variables` | the names the code reads |
 | `signal(name, **parameters)` | raise the event `<id>.<name>` |
 | `tick(now)` | called by `Dispatcher.tick()` with the clock; check the deadlines here |
+| `timed` | `True`: the signals come from the time, so `timers=False` mutes the type (`Timer`, `Clock`); `False` by default |
 | `snapshot()`, `restore(data)` | the data of the component in a snapshot; plain data |
 
 The methods of the type are its public functions. A method runs inside a
@@ -465,7 +468,7 @@ sys.exit(hsmd_session.Session(make, period=0.1).serve())
 
 | Member | Meaning |
 |---|---|
-| `Session(make, period)` | `make(**options)` returns a new `Dispatcher` built with the options given — `clock`, `calendar`, `trace`, `output`, `input`, `timers` — at the start and at every restart; `period` (seconds) is the step of the virtual clock |
+| `Session(make, period, start=None, loop=None)` | `make(**options)` returns a new `Dispatcher` built with the options given — `clock`, `calendar`, `trace`, `output`, `input`, `timers` — at the start and at every restart; `period` (seconds) is the step of the virtual clock; `start(dispatcher)` enters the initial states and returns the outcomes, `dispatcher.start()` by default; `loop()` runs at every period before the tick |
 | `serve(reader=sys.stdin, writer=sys.stdout)` | runs the session until `shutdown` or the end of the input; returns the exit code, 0 |
 
 `python -m hsmd_session DOCUMENT [--period S] [--machines A,B]` serves a
@@ -483,7 +486,7 @@ The answer to `initialize`:
 | Unit, message | The session does |
 |---|---|
 | step `event` | `step()`: one event from the queue; with the queue empty it advances the clock by `period` with `tick(run=False)`, queueing the stream items that fall due, until an event is queued, at most `IDLE_PERIODS` (1000) times, else the status is `waiting` |
-| step `input` | the next stream item: advances the clock to its time with `tick()` at every period, posts the item and `run()`; without a next item as `event` |
+| step `input` | the next stream item: advances the clock to its time with `tick()` at every period, posts the item and `run()`; without a next item as `event`; at one instant the events of the model go first, the stream items after them |
 | step `time` | advances the clock by `period` and `tick()` |
 | `run` | repeats `input` (`event` without a stream) until `pause`, the status `finished`, or at speed 0 the end of the stream or `IDLE_PERIODS` without events; at speed 1 the clock follows the wall clock, at N it runs N times faster |
 | `restart` | a new dispatcher from `make()`, the clock at 0, the stream from its first item, `start()` |
@@ -498,6 +501,8 @@ The answer to `initialize`:
   * `fired`: the `fire` records of the step;
   * `events`: the `triggers()`;
   * `time`, `position` and `queue`.
+* While the session serves, `sys.stdout` is a writer of `log` messages; the
+  messages go to the stream it had.
 * Every processed event is a `history` message: the name (empty for a
   completion event), the parameters, the time, the origin (`input` for the
   stream items, `user` for the posted events, `model` for the rest), the

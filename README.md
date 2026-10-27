@@ -16,7 +16,8 @@ The documentation is located in the `docs` directory and contains:
 * The interface - `API.md` (`API-ru.md` in Russian): for the authors of the
   programs, the diagrams and the component types - the `Dispatcher`, the code
   of a diagram, a machine written in Python, the standard components, the
-  time events, a component type of one's own, the errors
+  time events, a component type of one's own, the errors, the session of the
+  editor and the stream
 * The architecture - `ARCHITECTURE.md`: the usage requirements, the
   references to the standards PNST 984-2024 and PNST 1044-2025, the core
   specifications of the dispatcher
@@ -112,12 +113,21 @@ machine = hsmd.Machine('Robot', states=[
 dispatcher = hsmd.Dispatcher(machine, namespace=globals())
 ```
 
+The CyberiadaPro editor runs a machine step by step through a session:
+`python -m hsmd_session blinker.graphml` serves the document on stdin and
+stdout, on a virtual clock, and `hsmd_session.Session` serves the dispatcher
+of a program (hsm-to-python does so). `step()` handles one event of the
+queue, `tick(run=False)` only queues the due events, and `timers=False`
+leaves the timeouts to a recorded log (`hsmd_stream`, `docs/API.md`).
+
 ## Tests
 
     cd test
     python3 run.py            # compare with the good files
     python3 run.py --built    # the same, every document rebuilt from declarations
     python3 run.py --regen    # record the good files again
+    python3 stream_test.py    # the stream format
+    python3 session_test.py   # a scripted editor against test/good/session.txt
 
 Each test is a diagram from `test/graphs`, a scenario from `test/scripts`
 and the expected trace in `test/good`. The diagrams are checked with the

@@ -1,6 +1,6 @@
 # The Python HSM Dispatcher Architecture
 
-Document version: 0.11 (2026-10-26)
+Document version: 0.12 (2026-10-27)
 
 The dispatcher executes Hierarchical State Machine (HSM) diagrams at run
 time. The diagrams are stored in the CyberiadaML-GraphML format (CGML,
@@ -712,6 +712,13 @@ of the time.
   because the editor knows only the elements of the document.
 * The session's stdin is the channel: the dispatcher gets an empty `input`, and
   the `Log` messages and the prints go out as `log` messages.
+* A reader thread turns the stdin lines into a queue; the dispatcher runs in the
+  main thread only, which waits on the queue while paused and polls it between
+  the steps of a run.
+* At one instant the events of the model go first and the stream items after
+  them, in every unit and in a run, so a replay does not depend on the step.
+* A history row carries the time its event was handled; a run sends its state
+  at most every 0.05 s of the wall clock, its history always.
 
 ## Interface
 
@@ -738,7 +745,7 @@ DispatcherError  DocumentError  ActionError  ExecutionError  StoppedError
 | 1 (done) | simple and composite states with one region, initial and final pseudostates, choice, `entry/` and `exit/`, internal transitions, guards and `[else]`, transitions without a trigger, `transitionOrder`, `eventPropagation` with `propagate` and `block`, `ANY`, `UNKNOWN`, several machines, components, the Timer, the Log, priorities, outcomes, the trace, the snapshot |
 | 2 (done) | shallow and deep history, `defer`, entry and exit points, submachine states, terminate, the visibility of the components |
 | 3 | orthogonal regions and `do/` activities |
-| sessions (designed) | `step()`, `tick(run=False)`, `timers`, `hsmd_stream`, `hsmd_session` for the plugin sessions of the editor |
+| sessions (done) | `step()`, `tick(run=False)`, `timers`, `machines()`, `queued()`, `hsmd_stream`, `hsmd_session` for the plugin sessions of the editor |
 
 Stage 3 needs the support of the regions and of the `do/` blocks in
 `libcyberiadamlpp` first: the library rejects both today.

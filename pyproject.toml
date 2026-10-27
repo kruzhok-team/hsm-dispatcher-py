@@ -22,4 +22,4 @@ dependencies = ["cyberiadaml-py>=1.8; python_version >= '3.10' or sys_platform !
 
 [tool.setuptools]
 py-modules = ["hsmd", "hsmd_model", "hsmd_build", "hsmd_reader", "hsmd_actions", "hsmd_step",
-              "hsmd_components"]
+              "hsmd_components", "hsmd_stream", "hsmd_session"]

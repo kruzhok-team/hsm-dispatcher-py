@@ -1,5 +1,20 @@
 # hsm-dispatcher-py project changelog
 
+## Version 0.2.0 (unreleased)
+
+Added:
+- the step by step execution: `Dispatcher.step()` handles one event of the
+  queue, `tick(run=False)` only queues the due events, `machines()` and
+  `queued()` list the started machines and the pending events;
+- `Dispatcher(..., timers=False)`: no time events, the `timed` component
+  types (`Timer`, `Clock`) muted, the timeouts come from a recorded log;
+- `hsmd_stream`: the stream of timed events, read and written (seconds,
+  `+delta`, ISO 8601, the `timers` header);
+- `hsmd_session`: the session of the CyberiadaPro editor on stdin and stdout
+  (JSON-RPC 2.0): a virtual clock, the event, input and time steps, runs at a
+  speed, the replay of a stream, the saved log, the state and the history of
+  the machine; `python -m hsmd_session DOCUMENT`.
+
 ## Version 0.1.0
 
 Added:

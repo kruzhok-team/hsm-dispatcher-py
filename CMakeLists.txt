@@ -18,6 +18,8 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/hsmd.py
               ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_actions.py
               ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_step.py
               ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_components.py
+              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_stream.py
+              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_session.py
         DESTINATION ${PYTHON_INSTALL_DIR})
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ChangeLog.md
@@ -39,6 +41,12 @@ if(Python3_FOUND)
   enable_testing()
   add_test(NAME scenarios
            COMMAND ${Python3_EXECUTABLE} -B run.py
+           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
+  add_test(NAME stream
+           COMMAND ${Python3_EXECUTABLE} -B stream_test.py
+           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
+  add_test(NAME session
+           COMMAND ${Python3_EXECUTABLE} -B session_test.py
            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
 endif()
 
