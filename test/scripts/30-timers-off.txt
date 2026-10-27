@@ -1,0 +1,20 @@
+# a recorded log brings the events of the time: no time events, the timers and
+# the clock silent; a posted timeout is handled as any event
+load 10-timer.graphml period=20 timers=false
+start
+clock 50
+tick
+clock 100
+tick
+send t1.TIMEOUT
+load 25-time.graphml period=100 timers=false
+start
+clock 2000
+tick
+load 10-timer.graphml period=20
+start
+clock 100
+tick-queue
+queued
+step
+step

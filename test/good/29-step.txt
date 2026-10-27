@@ -1,0 +1,111 @@
+> load 09-events.graphml
+> start
+  fire G init-a
+  enter G a
+> machines
+= G
+> post LOW
+  post LOW 0
+> post HIGH priority=10 mark=first
+  post HIGH 10
+> post HIGHER priority=20
+  post HIGHER 20
+> queued
+= HIGHER HIGH LOW
+> step
+  event HIGHER
+  fire G a#6
+  print log HIGHER
+  outcome G fired a#6
+= HIGHER fired a#6
+> queued
+= HIGH LOW
+> step
+  event HIGH
+  fire G a#5
+  print log HIGH first
+  outcome G fired a#5
+= HIGH fired a#5
+> step
+  event LOW
+  fire G a#4
+  print log LOW
+  outcome G fired a#4
+= LOW fired a#4
+> step
+= empty
+> load 06-completion.graphml
+> start
+  fire G init-a
+  enter G a
+  print log enter A
+  completion G a
+  fire G a-b
+  print log a is complete
+  exit G a
+  print log exit A
+  enter G b
+  print log enter B
+  fire G binit-b1
+  enter G b1
+  print log enter B1
+  outcome G fired a-b
+= completion fired a-b
+> states
+= b b1
+> post DONE
+  post DONE 0
+> step
+  event DONE
+  fire G b1-bfin
+  exit G b1
+  print log exit B1
+  completion G b
+  outcome G fired b1-bfin
+= DONE fired b1-bfin
+> queued
+= completion
+> step
+  fire G b-c
+  print log b is complete
+  exit G b
+  print log exit B
+  enter G c
+  print log enter C
+  completion G c
+  outcome G fired b-c
+= completion fired b-c
+> states
+= c
+> load 17-defer.graphml
+> start
+  fire G init-a
+  enter G a
+  fire G ainit-a1
+  enter G a1
+> post E
+  post E 0
+> post GO
+  post GO 0
+> step
+  event E
+  defer G a1#1
+  outcome G deferred
+= E deferred
+> step
+  event GO
+  fire G a1-a2
+  exit G a1
+  enter G a2
+  outcome G fired a1-a2
+= GO fired a1-a2
+> queued
+= E
+> step
+  event E
+  fire G a2#1
+  print log E handled in A2
+  outcome G fired a2#1
+= E fired a2#1
+> states
+= a a2

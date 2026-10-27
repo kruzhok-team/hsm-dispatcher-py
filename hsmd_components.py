@@ -58,6 +58,7 @@ class Component:
     shared = False       # one instance per document, signals to every machine
     signals = None       # signal -> the names of its parameters; None: not declared
     variables = ()       # the names the text reads
+    timed = False        # True: its signals come from the time, muted by timers=False
 
     def __init__(self, ident, dispatcher, **parameters):
         self.id = ident
@@ -85,6 +86,7 @@ class Timer(Component):
     SIGNAL_TIMEOUT = 'TIMEOUT'
     signals = {SIGNAL_TIMEOUT: ()}
     variables = ('interval', 'enabled', 'difference')
+    timed = True
 
     def __init__(self, ident, dispatcher, **parameters):
         Component.__init__(self, ident, dispatcher, **parameters)
@@ -163,6 +165,7 @@ class Clock(Component):
     SIGNAL_ALARM = 'ALARM'
     signals = {SIGNAL_ALARM: ()}
     variables = ('now', 'hour', 'minute', 'second', 'weekday')
+    timed = True
 
     def __init__(self, ident, dispatcher, **parameters):
         Component.__init__(self, ident, dispatcher, **parameters)

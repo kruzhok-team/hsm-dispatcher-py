@@ -109,8 +109,10 @@ class Dispatcher:
 
     def __init__(self, source, clock=None, trace=None, output=None, machines=None,
                  namespace=None, period=None, calendar=None,
-                 input=None):  # pylint: disable=redefined-builtin
+                 input=None, timers=True):  # pylint: disable=redefined-builtin
         self.clock = clock if clock is not None else time.monotonic
+        # False: a recorded log brings the events of the time
+        self.timers = timers
         self.calendar = calendar if calendar is not None else time.time
         self.input = input if input is not None else sys.stdin
         self.period = period
@@ -239,6 +241,15 @@ class Dispatcher:
                 return outcomes
             outcomes.append(self._guarded(lambda e=event: self._process(e)))
 
+    def step(self):
+        """Process one event of the queue, in the order of run(); return its
+        outcome, or None when the queue is empty."""
+        self._check()
+        event = self._take()
+        if event is None:
+            return None
+        return self._guarded(lambda: self._process(event))
+
     def send(self, name, **parameters):
         """Post one event, process the queue, return the outcome of the event."""
         event = self.post(name, **parameters)
@@ -247,18 +258,30 @@ class Dispatcher:
                 return outcome
         return None
 
-    def tick(self):
-        """Let the components check the clock, then process the queue."""
+    def tick(self, run=True):
+        """Let the components check the clock, then process the queue; with
+        run=False the events stay in the queue for step()."""
         self._check()
         now = self.clock()
-        for item in self._times:
+        for item in self._times if self.timers else ():
             if now >= item[2]:
                 self.post(item[0])
                 while item[2] <= now:   # once, at whole periods from the start
                     item[2] += item[1]
         for component in list(self._components()):
+            if component.timed and not self.timers:
+                continue
             self._guarded(lambda c=component: c.tick(now))
-        return self.run()
+        return self.run() if run else []
+
+    def machines(self):
+        """The identifiers of the started machines."""
+        return [run.machine.id for run in self._runs]
+
+    def queued(self):
+        """The pending events in the order step() takes them."""
+        return (list(self._completions) + list(self._again) +
+                [item[2] for item in sorted(self._queue, key=lambda item: item[:2])])
 
     def states(self, machine=None):
         return self._run(machine).states()

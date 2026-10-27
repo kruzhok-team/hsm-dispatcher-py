@@ -1,0 +1,31 @@
+# one event at a time: the priorities, the completion events first, the deferred
+# events offered again after the change of the configuration
+load 09-events.graphml
+start
+machines
+post LOW
+post HIGH priority=10 mark=first
+post HIGHER priority=20
+queued
+step
+queued
+step
+step
+step
+load 06-completion.graphml
+start
+states
+post DONE
+step
+queued
+step
+states
+load 17-defer.graphml
+start
+post E
+post GO
+step
+step
+queued
+step
+states

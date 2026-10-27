@@ -164,14 +164,14 @@ class Scenario:
             self.write('= {} {} {}'.format(name, outcome.status,
                                            ' '.join(outcome.transitions)).rstrip())
 
-    def dispatch(self, source, machines=None, namespace=None, period=None):
+    def dispatch(self, source, machines=None, namespace=None, period=None, timers=True):
         """A new dispatcher with the clock, the trace and the output of the scenario."""
         self.dispatcher = hsmd.Dispatcher(source, clock=lambda: self.now / MS_IN_SECOND,
                                           trace=self.trace, output=self.stream,
                                           machines=machines, namespace=namespace,
                                           period=period, input=self.input(),
                                           calendar=lambda: CALENDAR_START +
-                                          self.now / MS_IN_SECOND)
+                                          self.now / MS_IN_SECOND, timers=timers)
         self.names = {}
 
     def input(self):
@@ -214,7 +214,7 @@ class Scenario:
             self.pipe = None
 
     def load(self, args):
-        """load <file> [machines=a,b] [period=ms]: the document."""
+        """load <file> [machines=a,b] [period=ms] [timers=false]: the document."""
         options = dict(arg.split('=', 1) for arg in args[1:])
         machines = options['machines'].split(',') if 'machines' in options else None
         period = int(options['period']) / MS_IN_SECOND if 'period' in options else None
@@ -222,7 +222,8 @@ class Scenario:
         if self.built:
             import hsmd_reader  # pylint: disable=import-outside-toplevel
             source = [declare(m) for m in hsmd_reader.load(source)]
-        self.dispatch(source, machines, self.names or None, period)
+        self.dispatch(source, machines, self.names or None, period,
+                      options.get('timers', 'true') != 'false')
 
     def build(self, args):
         """build <module> [<name>]: the machine written in Python in
@@ -262,6 +263,17 @@ class Scenario:
             self.now += int(args[0])
         elif name == 'tick':
             self.outcomes(dispatcher.tick())
+        elif name == 'tick-queue':
+            self.outcomes(dispatcher.tick(run=False))
+        elif name == 'step':
+            outcome = dispatcher.step()
+            if outcome is None:
+                self.write('= empty')
+            self.outcomes([outcome])
+        elif name == 'machines':
+            self.write('= ' + ' '.join(dispatcher.machines()))
+        elif name == 'queued':
+            self.write('= ' + ' '.join(e.name or 'completion' for e in dispatcher.queued()))
         elif name == 'states':
             self.write('= ' + ' '.join(dispatcher.states(*args)))
         elif name == 'triggers':
