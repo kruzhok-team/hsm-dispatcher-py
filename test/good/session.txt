@@ -1,0 +1,103 @@
+-> {"id":1,"method":"initialize","params":{"language":"en","session":1}}
+<- {"id":1,"result":{"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"kind":"driven","logic":"async","save":true,"speeds":[1,10,0],"steps":["event","input","time"],"stream":true}}
+<- {"method":"state","params":{"active":["a"],"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"fired":["init-a"],"queue":[],"status":"paused","text":"","time":0.0}}
+-> {"method":"control","params":{"command":"step","unit":"event"}}
+<- {"method":"log","params":{"text":"t1"}}
+<- {"method":"history","params":{"event":"t1.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.1}}
+<- {"method":"state","params":{"active":["a"],"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"fired":["a"],"queue":["t2.TIMEOUT"],"status":"paused","text":"","time":0.1}}
+-> {"method":"control","params":{"command":"step","unit":"event"}}
+<- {"method":"log","params":{"text":"t2 100"}}
+<- {"method":"history","params":{"event":"t2.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.1}}
+<- {"method":"state","params":{"active":["a"],"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"fired":["a"],"queue":[],"status":"paused","text":"","time":0.1}}
+-> {"method":"control","params":{"command":"step","unit":"time"}}
+<- {"method":"state","params":{"active":["a"],"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"fired":[],"queue":[],"status":"paused","text":"","time":0.15}}
+-> {"method":"event","params":{"name":"SHOW","params":{}}}
+<- {"method":"state","params":{"active":["a"],"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"fired":[],"queue":["SHOW"],"status":"paused","text":"","time":0.15}}
+-> {"method":"control","params":{"command":"step","unit":"event"}}
+<- {"method":"log","params":{"text":"50 50"}}
+<- {"method":"history","params":{"event":"SHOW","fired":["a"],"origin":"user","outcome":"fired","time":0.15}}
+<- {"method":"state","params":{"active":["a"],"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"fired":["a"],"queue":[],"status":"paused","text":"","time":0.15}}
+-> {"id":2,"method":"input","params":{"text":"0.300 SHOW\n0.500 STOP\nRESUME\n"}}
+<- {"id":2,"result":{"items":[{"event":"SHOW","time":0.3},{"event":"STOP","time":0.5},{"event":"RESUME"}]}}
+<- {"method":"state","params":{"active":["a"],"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"fired":["init-a"],"position":0,"queue":[],"status":"paused","text":"","time":0.0}}
+-> {"method":"control","params":{"command":"step","unit":"input"}}
+<- {"method":"log","params":{"text":"t1"}}
+<- {"method":"log","params":{"text":"t2 100"}}
+<- {"method":"log","params":{"text":"t1"}}
+<- {"method":"log","params":{"text":"t2 100"}}
+<- {"method":"log","params":{"text":"t1"}}
+<- {"method":"log","params":{"text":"t2 100"}}
+<- {"method":"log","params":{"text":"100 100"}}
+<- {"method":"history","params":{"event":"t1.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.1}}
+<- {"method":"history","params":{"event":"t2.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.1}}
+<- {"method":"history","params":{"event":"t1.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.2}}
+<- {"method":"history","params":{"event":"t2.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.2}}
+<- {"method":"history","params":{"event":"t1.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.3}}
+<- {"method":"history","params":{"event":"t2.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.3}}
+<- {"method":"history","params":{"event":"SHOW","fired":["a"],"origin":"input","outcome":"fired","time":0.3}}
+<- {"method":"state","params":{"active":["a"],"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"fired":["a"],"position":1,"queue":[],"status":"paused","text":"","time":0.3}}
+-> {"method":"control","params":{"command":"step","unit":"input"}}
+<- {"method":"log","params":{"text":"t1"}}
+<- {"method":"log","params":{"text":"t2 100"}}
+<- {"method":"log","params":{"text":"t1"}}
+<- {"method":"log","params":{"text":"t2 100"}}
+<- {"method":"history","params":{"event":"t1.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.4}}
+<- {"method":"history","params":{"event":"t2.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.4}}
+<- {"method":"history","params":{"event":"t1.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.5}}
+<- {"method":"history","params":{"event":"t2.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.5}}
+<- {"method":"history","params":{"event":"STOP","fired":["a"],"origin":"input","outcome":"fired","time":0.5}}
+<- {"method":"state","params":{"active":["a"],"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"fired":["a"],"position":2,"queue":[],"status":"paused","text":"","time":0.5}}
+-> {"method":"control","params":{"command":"step","unit":"input"}}
+<- {"method":"history","params":{"event":"RESUME","fired":["a"],"origin":"input","outcome":"fired","time":0.5}}
+<- {"method":"state","params":{"active":["a"],"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"fired":["a"],"position":3,"queue":[],"status":"paused","text":"","time":0.5}}
+-> {"id":3,"method":"save","params":{"path":"<tmp>/session.log"}}
+<- {"id":3,"result":{}}
+-> {"method":"control","params":{"command":"restart"}}
+<- {"method":"state","params":{"active":["a"],"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"fired":["init-a"],"position":0,"queue":[],"status":"paused","text":"","time":0.0}}
+-> {"method":"control","params":{"command":"run","speed":0}}
+<- {"method":"log","params":{"text":"t1"}}
+<- {"method":"history","params":{"event":"t1.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.1}}
+<- {"method":"log","params":{"text":"t2 100"}}
+<- {"method":"history","params":{"event":"t2.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.1}}
+<- {"method":"log","params":{"text":"t1"}}
+<- {"method":"history","params":{"event":"t1.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.2}}
+<- {"method":"log","params":{"text":"t2 100"}}
+<- {"method":"history","params":{"event":"t2.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.2}}
+<- {"method":"log","params":{"text":"t1"}}
+<- {"method":"history","params":{"event":"t1.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.3}}
+<- {"method":"log","params":{"text":"t2 100"}}
+<- {"method":"history","params":{"event":"t2.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.3}}
+<- {"method":"log","params":{"text":"100 100"}}
+<- {"method":"history","params":{"event":"SHOW","fired":["a"],"origin":"input","outcome":"fired","time":0.3}}
+<- {"method":"log","params":{"text":"t1"}}
+<- {"method":"history","params":{"event":"t1.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.4}}
+<- {"method":"log","params":{"text":"t2 100"}}
+<- {"method":"history","params":{"event":"t2.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.4}}
+<- {"method":"log","params":{"text":"t1"}}
+<- {"method":"history","params":{"event":"t1.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.5}}
+<- {"method":"log","params":{"text":"t2 100"}}
+<- {"method":"history","params":{"event":"t2.TIMEOUT","fired":["a"],"origin":"model","outcome":"fired","time":0.5}}
+<- {"method":"history","params":{"event":"STOP","fired":["a"],"origin":"input","outcome":"fired","time":0.5}}
+<- {"method":"history","params":{"event":"RESUME","fired":["a"],"origin":"input","outcome":"fired","time":0.5}}
+<- {"method":"state","params":{"active":["a"],"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"fired":["a"],"position":3,"queue":[],"status":"paused","text":"","time":0.5}}
+-> {"id":4,"method":"input","params":{"text":"1.0 SHOW\n0.5 STOP\n"}}
+<- {"error":{"code":-32602,"data":[{"line":2,"message":"the time goes back"}],"message":"the stream is not read"},"id":4}
+-> {"id":5,"method":"input","params":{"text":"# timers: recorded\n0.050 t1.TIMEOUT\n0.150 SHOW\n"}}
+<- {"id":5,"result":{"items":[{"event":"t1.TIMEOUT","time":0.05},{"event":"SHOW","time":0.15}]}}
+<- {"method":"state","params":{"active":["a"],"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"fired":["init-a"],"position":0,"queue":[],"status":"paused","text":"","time":0.0}}
+-> {"method":"control","params":{"command":"step","unit":"input"}}
+<- {"method":"log","params":{"text":"t1"}}
+<- {"method":"history","params":{"event":"t1.TIMEOUT","fired":["a"],"origin":"input","outcome":"fired","time":0.05}}
+<- {"method":"state","params":{"active":["a"],"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"fired":["a"],"position":1,"queue":[],"status":"paused","text":"","time":0.05}}
+-> {"method":"control","params":{"command":"step","unit":"input"}}
+<- {"method":"log","params":{"text":"0 0"}}
+<- {"method":"history","params":{"event":"SHOW","fired":["a"],"origin":"input","outcome":"fired","time":0.15}}
+<- {"method":"state","params":{"active":["a"],"events":["t1.TIMEOUT","t2.TIMEOUT","STOP","RESUME","RESET","SHOW"],"fired":["a"],"position":2,"queue":[],"status":"paused","text":"","time":0.15}}
+-> {"id":6,"method":"shutdown"}
+<- {"id":6,"result":{}}
+exit 0
+== saved
+# timers: model
+0.300 SHOW
+0.500 STOP
+0.500 RESUME
