@@ -26,7 +26,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import hsmd_stream  # pylint: disable=wrong-import-position
+import hsmd.stream  # pylint: disable=wrong-import-position
 
 LOG = '''# timers: recorded
 0.000   POWER_ON
@@ -47,7 +47,7 @@ def rounded(stream):
 
 
 def test_read():
-    stream = hsmd_stream.read(LOG)
+    stream = hsmd.stream.read(LOG)
     expected = [(0.0, 'POWER_ON', {}, 2),
                 (0.512, 'button.CLICKED', {'count': 2, 'name': 'a b'}, 3),
                 (1.3, 'sensor.VALUE', {'value': 23.5}, 4),
@@ -60,16 +60,16 @@ def test_read():
 
 
 def test_round_trip():
-    stream = hsmd_stream.read(LOG)
-    text = hsmd_stream.write(stream)
-    again = hsmd_stream.read(text)
+    stream = hsmd.stream.read(LOG)
+    text = hsmd.stream.write(stream)
+    again = hsmd.stream.read(text)
     if rounded(again) != rounded(stream) or again.timers != stream.timers:
         return text
     return None
 
 
 def test_iso():
-    stream = hsmd_stream.read('2026-10-26T12:00:00 POWER_ON\n2026-10-26T12:00:01.250 OPEN\n')
+    stream = hsmd.stream.read('2026-10-26T12:00:00 POWER_ON\n2026-10-26T12:00:01.250 OPEN\n')
     start = datetime.datetime(2026, 10, 26, 12, 0, 0).timestamp()
     if stream.start != start or [i.time for i in stream.items] != [0.0, 1.25]:
         return '{} {}'.format(stream.start, summary(stream))
@@ -78,7 +78,7 @@ def test_iso():
 
 def test_lone_word():
     # a lone word is an untimed item, even a number: a symbol of a tape
-    stream = hsmd_stream.read('0\n1\n1\n0\n')
+    stream = hsmd.stream.read('0\n1\n1\n0\n')
     if [(i.time, i.name) for i in stream.items] != [(None, '0'), (None, '1'), (None, '1'), (None, '0')]:
         return summary(stream)
     return None
@@ -99,8 +99,8 @@ ERRORS = [
 def test_errors():
     for text, line, words in ERRORS:
         try:
-            hsmd_stream.read(text)
-        except hsmd_stream.StreamError as e:
+            hsmd.stream.read(text)
+        except hsmd.stream.StreamError as e:
             if e.line != line or words not in e.message:
                 return '{!r}: line {} {!r}'.format(text, e.line, e.message)
             continue

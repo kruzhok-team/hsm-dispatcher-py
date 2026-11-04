@@ -3,24 +3,24 @@ cmake_minimum_required(VERSION 3.16)
 # the Debian package of the dispatcher; nothing is compiled
 project(hsm-dispatcher-py VERSION 0.1.0 LANGUAGES NONE)
 
-# the place of the pure Python modules on Debian
+# the place of the pure Python packages on Debian
 set(PYTHON_INSTALL_DIR "lib/python3/dist-packages" CACHE STRING
-    "the directory of the hsmd modules under the prefix")
+    "the directory of the hsmd package under the prefix")
 set(DOC_INSTALL_DIR "share/doc/python3-hsm-dispatcher")
 # the package directories do not follow the umask of the build
 set(CMAKE_INSTALL_DEFAULT_DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/hsmd.py
-              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_model.py
-              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_build.py
-              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_reader.py
-              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_actions.py
-              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_step.py
-              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_components.py
-              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_stream.py
-              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd_session.py
-        DESTINATION ${PYTHON_INSTALL_DIR})
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/hsmd/__init__.py
+              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd/model.py
+              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd/build.py
+              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd/reader.py
+              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd/actions.py
+              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd/step.py
+              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd/components.py
+              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd/stream.py
+              ${CMAKE_CURRENT_SOURCE_DIR}/hsmd/session.py
+        DESTINATION ${PYTHON_INSTALL_DIR}/hsmd)
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ChangeLog.md
               ${CMAKE_CURRENT_SOURCE_DIR}/README.md

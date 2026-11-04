@@ -29,7 +29,7 @@ try:
 except ImportError:
     from cyberiadaml_py import cml as CyberiadaML
 
-from hsmd_model import (DocumentError, STATE, COMPOSITE, INITIAL, FINAL, CHOICE, SHALLOW,
+from hsmd.model import (DocumentError, STATE, COMPOSITE, INITIAL, FINAL, CHOICE, SHALLOW,
                         DEEP, ENTRY, EXIT, TERMINATE, POINT_KINDS, EVENT_ANY, EVENT_UNKNOWN,
                         EXIT_FIRST, Block, Reaction, Vertex, ComponentDeclaration, Machine,
                         add_vertex, check)

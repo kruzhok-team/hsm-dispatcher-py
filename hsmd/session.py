@@ -31,7 +31,7 @@ import threading
 import time
 
 import hsmd
-import hsmd_stream
+import hsmd.stream
 
 SESSION_VERSION = 1
 DEFAULT_PERIOD = 0.1
@@ -116,7 +116,7 @@ class Session:
         self.dispatcher = None
         self.now = 0.0
         self.base = 0.0
-        self.stream = hsmd_stream.Stream()
+        self.stream = hsmd.stream.Stream()
         self.position = 0
         self.records = []
         self.origins = {}        # id(event) -> (event, origin) of the events the session posts
@@ -277,7 +277,7 @@ class Session:
         if not isinstance(name, str) or not name or self.dispatcher is None:
             return
         values = params.get('params') if isinstance(params.get('params'), dict) else {}
-        values = {k: hsmd_stream.parse_value(v) if isinstance(v, str) else v for k, v in values.items()}
+        values = {k: hsmd.stream.parse_value(v) if isinstance(v, str) else v for k, v in values.items()}
         self.guarded(lambda: self.post(name, values, 'user'))
         if not self.running:
             self.report([])
@@ -292,8 +292,8 @@ class Session:
                 self.reply_error(ident, INVALID_PARAMS, 'the stream cannot be read: {}'.format(e))
                 return
         try:
-            stream = hsmd_stream.read(text if isinstance(text, str) else '')
-        except hsmd_stream.StreamError as e:
+            stream = hsmd.stream.read(text if isinstance(text, str) else '')
+        except hsmd.stream.StreamError as e:
             self.reply_error(ident, INVALID_PARAMS, 'the stream is not read',
                              [{'line': e.line, 'message': e.message}])
             return
@@ -313,11 +313,11 @@ class Session:
 
     def save(self, ident, params):
         path = params.get('path')
-        items = [hsmd_stream.Item(when, name, values)
+        items = [hsmd.stream.Item(when, name, values)
                  for when, name, values in sorted(self.inputs, key=lambda entry: entry[0])]
         try:
             with open(path, 'w', encoding='utf-8') as target:
-                target.write(hsmd_stream.write(hsmd_stream.Stream(items, self.stream.timers)))
+                target.write(hsmd.stream.write(hsmd.stream.Stream(items, self.stream.timers)))
         except (OSError, TypeError) as e:
             self.reply_error(ident, INTERNAL_ERROR, 'the log cannot be written: {}'.format(e))
             return
@@ -339,7 +339,7 @@ class Session:
         self.dispatcher = self.make(
             clock=lambda: self.now, calendar=lambda: self.base + self.now,
             trace=self.records.append, output=_LogWriter(self.log), input=_NoInput(),
-            timers=self.stream.timers != hsmd_stream.TIMERS_RECORDED)
+            timers=self.stream.timers != hsmd.stream.TIMERS_RECORDED)
         return self.stamp(self.start(self.dispatcher) or [])
 
     def stamp(self, outcomes):

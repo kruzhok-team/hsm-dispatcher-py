@@ -31,7 +31,7 @@ import tempfile
 import threading
 
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-SESSION = os.path.join(os.path.dirname(TEST_DIR), 'hsmd_session.py')
+REPOSITORY = os.path.dirname(TEST_DIR)
 GRAPHS_DIR = os.path.join(TEST_DIR, 'graphs')
 GOOD = os.path.join(TEST_DIR, 'good', 'session.txt')
 WAIT_S = 30
@@ -88,9 +88,10 @@ class Client:
     def __init__(self):
         # the process outlives the constructor: killed by transcript()
         self.process = subprocess.Popen(  # pylint: disable=consider-using-with
-            [sys.executable, '-B', SESSION, '10-timer.graphml', '--period', '0.05'],
+            [sys.executable, '-B', '-m', 'hsmd.session', '10-timer.graphml', '--period', '0.05'],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True,
-            cwd=GRAPHS_DIR, bufsize=1)
+            cwd=GRAPHS_DIR, bufsize=1, env=dict(os.environ, PYTHONPATH=os.pathsep.join(
+                p for p in (REPOSITORY, os.environ.get('PYTHONPATH')) if p)))
         self.lines = queue.Queue()
         threading.Thread(target=self.read, daemon=True).start()
 

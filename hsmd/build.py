@@ -25,11 +25,11 @@
 # pylint: disable=redefined-builtin,too-few-public-methods,too-many-arguments
 # pylint: disable=too-many-instance-attributes
 
-from hsmd_model import (DocumentError, STATE, COMPOSITE, INITIAL, FINAL, CHOICE, SHALLOW, DEEP,
+from hsmd.model import (DocumentError, STATE, COMPOSITE, INITIAL, FINAL, CHOICE, SHALLOW, DEEP,
                         ENTRY, EXIT, TERMINATE, EVENT_ANY, EVENT_UNKNOWN, GUARD_ELSE,
                         ACTION_FIRST, EXIT_FIRST, Block, Reaction, Vertex, ComponentDeclaration,
                         add_vertex, check)
-import hsmd_model
+import hsmd.model
 
 ELSE = GUARD_ELSE
 # the identifiers the declarations leave out: <parent>.<kind>, <source>-<target>#<n>
@@ -268,7 +268,7 @@ def build(declaration):
     """The model of a machine written in Python, checked by the rules of a document."""
     if not isinstance(declaration, Machine):
         raise DocumentError('not a machine: {!r}'.format(declaration))
-    machine = hsmd_model.Machine(declaration.id, declaration.name)
+    machine = hsmd.model.Machine(declaration.id, declaration.name)
     if declaration.transition_order not in (ACTION_FIRST, EXIT_FIRST):
         raise DocumentError("{}: bad transition order '{}'".format(
             machine.where(), declaration.transition_order))

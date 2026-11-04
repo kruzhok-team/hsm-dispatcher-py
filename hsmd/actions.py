@@ -23,7 +23,7 @@
 import inspect
 import traceback
 
-from hsmd_model import DispatcherError, DocumentError
+from hsmd.model import DispatcherError, DocumentError
 
 EVENT_NAME = 'event'
 

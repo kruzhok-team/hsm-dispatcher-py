@@ -25,15 +25,14 @@ import heapq
 import sys
 import time
 
-import hsmd_build
-import hsmd_components
-from hsmd_actions import ActionError, EVENT_NAME
-from hsmd_build import (Machine, State, Initial, Final, Terminate, Choice, History,
-                        EntryPoint, ExitPoint, On, Transition, Declaration, ELSE)
-from hsmd_components import (Component, register, describe, TIME_EVENTS, Timer, Log, Clock,
-                             Console)
-from hsmd_model import DispatcherError, DocumentError
-from hsmd_step import (MachineRun, ExecutionError, FIRED, REJECTED, DROPPED, DEFERRED)
+from hsmd.actions import ActionError, EVENT_NAME
+from hsmd.build import (build as _build_model, Machine, State, Initial, Final, Terminate,
+                        Choice, History, EntryPoint, ExitPoint, On, Transition, Declaration,
+                        ELSE)
+from hsmd.components import (find as _find_type, Component, register, describe, TIME_EVENTS,
+                             Timer, Log, Clock, Console)
+from hsmd.model import DispatcherError, DocumentError
+from hsmd.step import (MachineRun, ExecutionError, FIRED, REJECTED, DROPPED, DEFERRED)
 
 __all__ = ['Dispatcher', 'Event', 'Outcome', 'Component', 'register', 'describe', 'TIME_EVENTS',
            'Timer', 'Log', 'Clock', 'Console',
@@ -94,9 +93,9 @@ def _load(source):
     """The model: the machines of the document at the path, or the machines
     written in Python."""
     if isinstance(source, str):
-        import hsmd_reader  # pylint: disable=import-outside-toplevel
-        return hsmd_reader.load(source)
-    machines = [hsmd_build.build(m) for m in
+        from hsmd.reader import load  # pylint: disable=import-outside-toplevel
+        return load(source)
+    machines = [_build_model(m) for m in
                 (source if isinstance(source, (list, tuple)) else [source])]
     idents = [m.id for m in machines]
     for ident in idents:
@@ -153,7 +152,7 @@ class Dispatcher:
     def _create_components(self, machine, namespace):
         for declaration in machine.components:
             where = "{}, component '{}'".format(machine.where(), declaration.id)
-            cls = hsmd_components.find(declaration.type)
+            cls = _find_type(declaration.type)
             if cls is None:
                 raise DocumentError("{}: unknown type '{}'".format(where, declaration.type))
             if declaration.id == EVENT_NAME:

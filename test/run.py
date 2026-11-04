@@ -43,7 +43,7 @@ if os.environ.get('HSMD_BACKEND') == 'cml':
     sys.modules['CyberiadaML'] = cml
 
 import hsmd  # pylint: disable=wrong-import-position
-import hsmd_components  # pylint: disable=wrong-import-position
+import hsmd.components  # pylint: disable=wrong-import-position
 
 GRAPHS_DIR = os.path.join(TEST_DIR, 'graphs')
 MACHINES_DIR = os.path.join(TEST_DIR, 'machines')
@@ -201,7 +201,7 @@ class Scenario:
 
     def describe(self, ctype):
         """describe <type>: the declared API of a component type."""
-        api = hsmd.describe(hsmd_components.find(ctype))
+        api = hsmd.describe(hsmd.components.find(ctype))
         for key in ('signals', 'methods', 'variables'):
             self.write('= {} {}'.format(key, api[key]))
 
@@ -220,8 +220,8 @@ class Scenario:
         period = int(options['period']) / MS_IN_SECOND if 'period' in options else None
         source = args[0]
         if self.built:
-            import hsmd_reader  # pylint: disable=import-outside-toplevel
-            source = [declare(m) for m in hsmd_reader.load(source)]
+            from hsmd import reader  # pylint: disable=import-outside-toplevel
+            source = [declare(m) for m in reader.load(source)]
         self.dispatch(source, machines, self.names or None, period,
                       options.get('timers', 'true') != 'false')
 

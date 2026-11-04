@@ -20,8 +20,8 @@
 #
 #  -----------------------------------------------------------------------------
 
-import hsmd_actions
-from hsmd_model import (DispatcherError, ROOT, STATE, COMPOSITE, INITIAL, FINAL, CHOICE,
+import hsmd.actions
+from hsmd.model import (DispatcherError, ROOT, STATE, COMPOSITE, INITIAL, FINAL, CHOICE,
                          SHALLOW, ENTRY, EXIT, TERMINATE, HISTORY_KINDS,
                          ACTION_FIRST, EVENT_ANY, EVENT_UNKNOWN)
 
@@ -58,12 +58,12 @@ class MachineRun:
         self._fired = []
         for vertex in machine.vertices.values():
             for block in vertex.entry + vertex.exit:
-                block.code = hsmd_actions.compile_behavior(block.text, block.where)
+                block.code = hsmd.actions.compile_behavior(block.text, block.where)
             for reaction in vertex.reactions:
-                reaction.code = hsmd_actions.compile_behavior(reaction.behavior,
+                reaction.code = hsmd.actions.compile_behavior(reaction.behavior,
                                                               reaction.where)
                 if reaction.guard and not reaction.is_else():
-                    reaction.guard_code = hsmd_actions.compile_guard(reaction.guard,
+                    reaction.guard_code = hsmd.actions.compile_guard(reaction.guard,
                                                                      reaction.where)
 
     # ------------------------------------------------------------------------
@@ -108,12 +108,12 @@ class MachineRun:
     # execution
 
     def start(self):
-        self.namespace[hsmd_actions.EVENT_NAME] = None
+        self.namespace[hsmd.actions.EVENT_NAME] = None
         self.active = self.machine.root
         self._enter_default(self.machine.root)
 
     def step(self, event):
-        self.namespace[hsmd_actions.EVENT_NAME] = event
+        self.namespace[hsmd.actions.EVENT_NAME] = event
         if self.active is None or self.finished:
             return MachineOutcome(self.machine.id, DROPPED)
         if event.vertex is not None:
@@ -199,8 +199,8 @@ class MachineRun:
     def _guard(self, reaction):
         if reaction.guard_code is None:
             return True
-        value = hsmd_actions.check(reaction.guard_code, self.namespace)
-        self.host.trace('guard', self.machine.id, reaction.id, hsmd_actions.name(reaction.guard),
+        value = hsmd.actions.check(reaction.guard_code, self.namespace)
+        self.host.trace('guard', self.machine.id, reaction.id, hsmd.actions.name(reaction.guard),
                         value)
         return value
 
@@ -209,21 +209,21 @@ class MachineRun:
         if reaction.source.kind != INITIAL:
             self._fired.append(reaction.id)
         if reaction.target is None:
-            hsmd_actions.run(reaction.code, self.namespace)
+            hsmd.actions.run(reaction.code, self.namespace)
             return
         if reaction.target.kind == TERMINATE:
             # no state is left, no exit action runs (PNST 984, 7.10.6)
-            hsmd_actions.run(reaction.code, self.namespace)
+            hsmd.actions.run(reaction.code, self.namespace)
             self.active = reaction.target
             self.finished = True
             self.host.trace('terminated', self.machine.id)
             return
         if self.machine.transition_order == ACTION_FIRST:
-            hsmd_actions.run(reaction.code, self.namespace)
+            hsmd.actions.run(reaction.code, self.namespace)
             self._exit_to(reaction.owner)
         else:
             self._exit_to(reaction.owner)
-            hsmd_actions.run(reaction.code, self.namespace)
+            hsmd.actions.run(reaction.code, self.namespace)
         self._arrive(reaction.target, reaction.owner)
 
     def _exit_to(self, owner):
@@ -233,7 +233,7 @@ class MachineRun:
             if vertex.is_state():
                 self.host.trace('exit', self.machine.id, vertex.id)
                 for block in vertex.exit:
-                    hsmd_actions.run(block.code, self.namespace)
+                    hsmd.actions.run(block.code, self.namespace)
             # the history of the container: its last child and the last leaf
             self.history[vertex.parent.id] = (vertex.id, leaf.id)
             vertex = vertex.parent
@@ -250,7 +250,7 @@ class MachineRun:
             self.host.trace('enter', self.machine.id, vertex.id)
             self.active = vertex
             for block in vertex.entry:
-                hsmd_actions.run(block.code, self.namespace)
+                hsmd.actions.run(block.code, self.namespace)
         if target.kind == STATE:
             if any(not r.trigger for r in target.reactions):
                 self.host.complete(self, target)

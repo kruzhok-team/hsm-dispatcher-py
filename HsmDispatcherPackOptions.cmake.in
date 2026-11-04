@@ -7,7 +7,7 @@ set(CPACK_PACKAGE_CONTACT "aleksey@fedoseev.net")
 set(CPACK_RESOURCE_FILE_LICENSE "@PROJECT_SOURCE_DIR@/LICENSE")
 set(CPACK_RESOURCE_FILE_README "@PROJECT_SOURCE_DIR@/README.md")
 
-# the pure Python modules of the dispatcher
+# the pure Python package of the dispatcher
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "all")
 set(CPACK_DEBIAN_PACKAGE_NAME "python3-hsm-dispatcher")
@@ -16,7 +16,7 @@ set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "The Python interpreter of the CyberiadaML 
 Executes hierarchical state machine diagrams at run time with the semantics
 of PNST 984-2024: the event queue, the hierarchy, history, deferred and
 propagated events, submachine states, and Python components the action text
-of the diagram calls. The module hsmd.")
+of the diagram calls. The package hsmd.")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "python3 (>= 3.8), python3-libcyberiadamlpp (>= 1.0.7) | python3-cyberiadaml (>= 1.8.0)")
 
 # a per-release build tags the version (e.g. 0.1.0+ubuntu2404)
