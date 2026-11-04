@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # the Debian package of the dispatcher; nothing is compiled
-project(hsm-dispatcher-py VERSION 0.1.0 LANGUAGES NONE)
+project(hsm-dispatcher-py VERSION 0.2.0 LANGUAGES NONE)
 
 # the place of the pure Python packages on Debian
 set(PYTHON_INSTALL_DIR "lib/python3/dist-packages" CACHE STRING

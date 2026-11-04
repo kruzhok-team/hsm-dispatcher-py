@@ -1,6 +1,6 @@
 # hsm-dispatcher-py project changelog
 
-## Version 0.2.0 (unreleased)
+## Version 0.2.0
 
 Added:
 - the step by step execution: `Dispatcher.step()` handles one event of the

@@ -33,7 +33,7 @@ binding with `python3 -c "import CyberiadaML"`.
 The Debian package:
 
     cmake -B build && cd build && ctest && cpack -G DEB
-    sudo apt install ./python3-hsm-dispatcher_0.1.0_all.deb
+    sudo apt install ./python3-hsm-dispatcher_0.2.0_all.deb
 
 `ctest` runs the scenario tests with the Python CMake finds
 (`-DPython3_EXECUTABLE=...` selects another one). The package depends on
