@@ -1,6 +1,6 @@
 # The Python HSM Dispatcher Architecture
 
-Document version: 0.12 (2026-10-27)
+Document version: 0.13 (2026-11-04)
 
 The dispatcher executes Hierarchical State Machine (HSM) diagrams at run
 time. The diagrams are stored in the CyberiadaML-GraphML format (CGML,
@@ -13,7 +13,7 @@ of its own, and it contains nothing specific to a particular application.
 It depends on the `CyberiadaML` module and on the Python 3 standard library
 only. The module is the binding of `libcyberiadamlpp-py` when it is installed,
 else the pure-Python interface of `cyberiadaml-py` (`cyberiadaml_py.cml`, the
-same names and results): `hsmd_reader.py` chooses it, and `HSMD_BACKEND=cml`
+same names and results): `hsmd/reader.py` chooses it, and `HSMD_BACKEND=cml`
 runs the scenario tests on it beside an installed binding.
 
 ## Usage requirements
@@ -79,14 +79,14 @@ The standards leave these points undefined. The dispatcher fixes them:
 ## Structure
 
 ```
-   hsmd_reader.py
+   hsmd/reader.py
  +----------------+
  |     Reader     | ---+
- +----------------+    |    hsmd_model.py         hsmd_step.py              hsmd_actions.py
+ +----------------+    |    hsmd/model.py         hsmd/step.py              hsmd/actions.py
     CyberiadaML        +--> +-----------+        +----------------+        +---------------+
                        |    |   Model   | model  |                |  code  |    Actions    |
                        |    |   checks  | -----> |  Interpreter   | -----> |    text or    |
-   hsmd_build.py       |    +-----------+        |                |        |   functions   |
+   hsmd/build.py       |    +-----------+        |                |        |   functions   |
  +----------------+    |                         +----------------+ <----- +---------------+
  |  Declarations  | ---+                                             value
  +----------------+                                 ^          |              |         ^
@@ -94,25 +94,27 @@ The standards leave these points undefined. The dispatcher fixes them:
   in Python                                         |          v              v         |
                                                  +----------------+        +---------------+
                            application ------->  |   Dispatcher   | <----- |   Component   |
-                            post, run, tick,     |    hsmd.py     | signal |   Timer, Log  |
+                            post, run, tick,     |  __init__.py   | signal |   Timer, Log  |
                             queries, snapshot    |                |        |   user types  |
                                                  +----------------+        +---------------+
-                                                                          hsmd_components.py
+                                                                          hsmd/components.py
 ```
 
-The modules are plain files in the repository root; there is no package.
+The modules are the package `hsmd` (`hsmd/` in the repository root), installed
+as `dist-packages/hsmd/` by the Debian package and `site-packages/hsmd/` by
+pip; `import hsmd` gives the dispatcher.
 
 | Module | Role |
 |---|---|
-| `hsmd.py` | The `Dispatcher`: the queue, the public interface, the snapshot, the trace. The only module an application imports besides the component base. |
-| `hsmd_model.py` | The model: the vertices, the reactions, the component declarations, the checks of the rules. No CyberiadaML. |
-| `hsmd_reader.py` | Opens the document with the binding and builds the model; copies the referenced machines into the submachine states. Imported only for a document. |
-| `hsmd_build.py` | The declarations of a machine written in Python; builds the same model. |
-| `hsmd_step.py` | The step of one machine for one event. Keeps the active configuration. |
-| `hsmd_actions.py` | Compiles and runs the action and guard text. |
-| `hsmd_components.py` | The `Component` base class, the registry of types, the standard types `Timer` and `Log`. |
-| `hsmd_stream.py` | The stream of timed events: reads and writes its text format. |
-| `hsmd_session.py` | The editor session: the protocol over stdin and stdout, the virtual clock, the replay of a stream. Imports `hsmd` and `hsmd_stream`. |
+| `hsmd/__init__.py` | The `Dispatcher`: the queue, the public interface, the snapshot, the trace. The only module an application imports besides the component base. |
+| `hsmd/model.py` | The model: the vertices, the reactions, the component declarations, the checks of the rules. No CyberiadaML. |
+| `hsmd/reader.py` | Opens the document with the binding and builds the model; copies the referenced machines into the submachine states. Imported only for a document. |
+| `hsmd/build.py` | The declarations of a machine written in Python; builds the same model. |
+| `hsmd/step.py` | The step of one machine for one event. Keeps the active configuration. |
+| `hsmd/actions.py` | Compiles and runs the action and guard text. |
+| `hsmd/components.py` | The `Component` base class, the registry of types, the standard types `Timer` and `Log`. |
+| `hsmd/stream.py` | The stream of timed events: reads and writes its text format. |
+| `hsmd/session.py` | The editor session: the protocol over stdin and stdout, the virtual clock, the replay of a stream. Imports `hsmd` and `hsmd.stream`. |
 
 The application talks to the `Dispatcher` only. The text of the diagram
 calls the components; the components answer with signals, which return to
@@ -665,14 +667,14 @@ natural moment is after `run()`, when the queue is empty.
 The editor runs a machine step by step through a session (the editor's
 `PLUGINS.md`, Level 2). It shows the active states and the fired transitions,
 and the user steps, runs, posts events and replays a recorded stream.
-`hsmd_session.py` serves the protocol over stdin and stdout for any dispatcher an
+`hsmd/session.py` serves the protocol over stdin and stdout for any dispatcher an
 application makes; hsm-to-python makes one from its generated program.
 
 ```
-  the editor               hsmd_session.py                    hsmd.py
+  the editor               hsmd/session.py                    hsmd/__init__.py
  +-----------------+ JSON +-----------------------------+    +-----------------+
  | marks, history  | lines| the virtual clock           |    | Dispatcher      |
- | Step, Run,      | ---> | the stream (hsmd_stream.py) | -> | step()          |
+ | Step, Run,      | ---> | the stream (hsmd/stream.py) | -> | step()          |
  | Pause, events,  | <--- | the events the user posts   |    | tick(run=False) |
  | stream, Save Log|      | trace -> state, history     | <- | trace, states() |
  +-----------------+      +-----------------------------+    +-----------------+
@@ -727,8 +729,8 @@ and the component types in `API.md` (`API-ru.md` in Russian): the
 `Dispatcher` with its parameters and methods, `Event` and `Outcome`, the
 trace, the snapshot, the code of a diagram, the declarations of a machine
 written in Python, the standard components, the time events, a component
-type of one's own, the errors and the sessions (`hsmd_session`,
-`hsmd_stream`, imported on their own). `hsmd` exports:
+type of one's own, the errors and the sessions (`hsmd.session`,
+`hsmd.stream`, imported on their own). `hsmd` exports:
 
 ```
 Dispatcher  Event  Outcome  FIRED  REJECTED  DROPPED  DEFERRED  TIME_EVENTS
@@ -745,7 +747,7 @@ DispatcherError  DocumentError  ActionError  ExecutionError  StoppedError
 | 1 (done) | simple and composite states with one region, initial and final pseudostates, choice, `entry/` and `exit/`, internal transitions, guards and `[else]`, transitions without a trigger, `transitionOrder`, `eventPropagation` with `propagate` and `block`, `ANY`, `UNKNOWN`, several machines, components, the Timer, the Log, priorities, outcomes, the trace, the snapshot |
 | 2 (done) | shallow and deep history, `defer`, entry and exit points, submachine states, terminate, the visibility of the components |
 | 3 | orthogonal regions and `do/` activities |
-| sessions (done) | `step()`, `tick(run=False)`, `timers`, `machines()`, `queued()`, `hsmd_stream`, `hsmd_session` for the plugin sessions of the editor |
+| sessions (done) | `step()`, `tick(run=False)`, `timers`, `machines()`, `queued()`, `hsmd.stream`, `hsmd.session` for the plugin sessions of the editor |
 
 Stage 3 needs the support of the regions and of the `do/` blocks in
 `libcyberiadamlpp` first: the library rejects both today.

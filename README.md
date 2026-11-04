@@ -54,8 +54,9 @@ directory into a `.pth` file of the environment instead:
 
     echo /path/to/libcyberiadamlpp-py/build > "$(python -c "import sysconfig; print(sysconfig.get_paths()['purelib'])")/cyberiadaml.pth"
 
-Check with `python3 -c "import hsmd"`. The modules are plain files, so the
-directory of the repository on the Python path works as well.
+Check with `python3 -c "import hsmd"`. The package `hsmd` is in the root of
+the repository, so the directory of the repository on the Python path works
+as well.
 
 ## Usage
 
@@ -114,11 +115,11 @@ dispatcher = hsmd.Dispatcher(machine, namespace=globals())
 ```
 
 The CyberiadaPro editor runs a machine step by step through a session:
-`python -m hsmd_session blinker.graphml` serves the document on stdin and
-stdout, on a virtual clock, and `hsmd_session.Session` serves the dispatcher
+`python -m hsmd.session blinker.graphml` serves the document on stdin and
+stdout, on a virtual clock, and `hsmd.session.Session` serves the dispatcher
 of a program (hsm-to-python does so). `step()` handles one event of the
 queue, `tick(run=False)` only queues the due events, and `timers=False`
-leaves the timeouts to a recorded log (`hsmd_stream`, `docs/API.md`).
+leaves the timeouts to a recorded log (`hsmd.stream`, `docs/API.md`).
 
 ## Tests
 

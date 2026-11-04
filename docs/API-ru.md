@@ -441,14 +441,14 @@ threshold/ 20
 
 ## Сессии
 
-`hsmd_session` предоставляет машину редактору CyberiadaPro. Редактор отмечает
+`hsmd.session` предоставляет машину редактору CyberiadaPro. Редактор отмечает
 на диаграмме активные состояния и сработавшие переходы, а пользователь делает
 шаги, запускает исполнение, посылает события и воспроизводит поток. Протокол
 описан в главе «Сессии» документа `PLUGIN-API.md` редактора; это управляемая
 сессия (`driven`) с асинхронной логикой.
 
 ```
- CyberiadaPro             hsmd_session                  hsmd
+ CyberiadaPro             hsmd.session                  hsmd
  ────────────             ────────────                  ────
  control, event, ─stdin─▶ виртуальные часы,   ────────▶ Dispatcher из
  input, save              поток, посланные              make(**options)
@@ -461,14 +461,14 @@ threshold/ 20
 import sys
 
 import hsmd
-import hsmd_session
+import hsmd.session
 
 
 def make(**options):
     return hsmd.Dispatcher('coffee.graphml', period=0.1, **options)
 
 
-sys.exit(hsmd_session.Session(make, period=0.1).serve())
+sys.exit(hsmd.session.Session(make, period=0.1).serve())
 ```
 
 | Член | Значение |
@@ -476,7 +476,7 @@ sys.exit(hsmd_session.Session(make, period=0.1).serve())
 | `Session(make, period, start=None, loop=None)` | `make(**options)` возвращает новый `Dispatcher`, построенный с переданными параметрами — `clock`, `calendar`, `trace`, `output`, `input`, `timers`, — в начале и при каждом перезапуске; `period` (секунды) — шаг виртуальных часов; `start(dispatcher)` входит в начальные состояния и возвращает исходы, по умолчанию `dispatcher.start()`; `loop()` выполняется на каждом периоде перед тактом |
 | `serve(reader=sys.stdin, writer=sys.stdout)` | ведёт сессию до `shutdown` или конца ввода; возвращает код завершения, 0 |
 
-`python -m hsmd_session DOCUMENT [--period S] [--machines A,B]` предоставляет
+`python -m hsmd.session DOCUMENT [--period S] [--machines A,B]` предоставляет
 документ как есть, код диаграммы исполняется в новом пространстве имён.
 
 Ответ на `initialize`:
@@ -545,7 +545,7 @@ SHOW                                  без времени: сразу посл
 * `# timers: recorded` заставляет сессию строить диспетчер с `timers=False`:
   таймауты и события времени приходят из потока. По умолчанию — `model`.
 
-| Член `hsmd_stream` | Значение |
+| Член `hsmd.stream` | Значение |
 |---|---|
 | `read(text)` | `Stream`: `items` и `timers` (`'model'` или `'recorded'`); неверная строка — `StreamError` с `line` |
 | `write(stream)` | текст: время в секундах, три знака после запятой |

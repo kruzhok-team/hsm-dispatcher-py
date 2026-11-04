@@ -437,14 +437,14 @@ a false guard.
 
 ## Sessions
 
-`hsmd_session` serves a machine to the CyberiadaPro editor. The editor marks
+`hsmd.session` serves a machine to the CyberiadaPro editor. The editor marks
 the active states and the fired transitions on the diagram, and the user
 steps, runs, posts events and replays a stream. The protocol is the Sessions
 chapter of the editor's `PLUGIN-API.md`; this is a driven session with the
 async logic.
 
 ```
- CyberiadaPro             hsmd_session                  hsmd
+ CyberiadaPro             hsmd.session                  hsmd
  ────────────             ────────────                  ────
  control, event, ─stdin─▶ the virtual clock,  ────────▶ a Dispatcher from
  input, save              the stream, the posts         make(**options)
@@ -456,14 +456,14 @@ async logic.
 import sys
 
 import hsmd
-import hsmd_session
+import hsmd.session
 
 
 def make(**options):
     return hsmd.Dispatcher('coffee.graphml', period=0.1, **options)
 
 
-sys.exit(hsmd_session.Session(make, period=0.1).serve())
+sys.exit(hsmd.session.Session(make, period=0.1).serve())
 ```
 
 | Member | Meaning |
@@ -471,7 +471,7 @@ sys.exit(hsmd_session.Session(make, period=0.1).serve())
 | `Session(make, period, start=None, loop=None)` | `make(**options)` returns a new `Dispatcher` built with the options given — `clock`, `calendar`, `trace`, `output`, `input`, `timers` — at the start and at every restart; `period` (seconds) is the step of the virtual clock; `start(dispatcher)` enters the initial states and returns the outcomes, `dispatcher.start()` by default; `loop()` runs at every period before the tick |
 | `serve(reader=sys.stdin, writer=sys.stdout)` | runs the session until `shutdown` or the end of the input; returns the exit code, 0 |
 
-`python -m hsmd_session DOCUMENT [--period S] [--machines A,B]` serves a
+`python -m hsmd.session DOCUMENT [--period S] [--machines A,B]` serves a
 document as it is, with the code of the diagram in a new namespace.
 
 The answer to `initialize`:
@@ -541,7 +541,7 @@ SHOW                                  no time: right after the previous item
   `timers=False`: the timeouts and the time events come from the stream. The
   default is `model`.
 
-| Member of `hsmd_stream` | Meaning |
+| Member of `hsmd.stream` | Meaning |
 |---|---|
 | `read(text)` | a `Stream`: `items` and `timers` (`'model'` or `'recorded'`); a bad line is a `StreamError` with `line` |
 | `write(stream)` | the text: the times in seconds, three decimals |
