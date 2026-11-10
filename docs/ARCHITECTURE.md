@@ -1,6 +1,6 @@
 # The Python HSM Dispatcher Architecture
 
-Document version: 0.13 (2026-11-04)
+Document version: 0.14 (2026-11-10)
 
 The dispatcher executes Hierarchical State Machine (HSM) diagrams at run
 time. The diagrams are stored in the CyberiadaML-GraphML format (CGML,
@@ -673,10 +673,13 @@ application makes; hsm-to-python makes one from its generated program.
 ```
   the editor               hsmd/session.py                    hsmd/__init__.py
  +-----------------+ JSON +-----------------------------+    +-----------------+
- | marks, history  | lines| the virtual clock           |    | Dispatcher      |
- | Step, Run,      | ---> | the stream (hsmd/stream.py) | -> | step()          |
- | Pause, events,  | <--- | the events the user posts   |    | tick(run=False) |
- | stream, Save Log|      | trace -> state, history     | <- | trace, states() |
+ | marks, history  | lines| Channel: the lines, the     |    | Dispatcher      |
+ | Step, Run,      | ---> |   reader thread, the queue  |    |                 |
+ | Pause, events,  | <--- | Session: the virtual clock, | -> | step()          |
+ | stream, Save Log|      |   the stream (hsmd/stream), |    | tick(run=False) |
+ |                 |      |   the events the user posts |    |                 |
+ |                 |      | history_row, active, fired: | <- | trace, states() |
+ |                 |      |   trace -> state, history   |    |                 |
  +-----------------+      +-----------------------------+    +-----------------+
                                  | make(**options): at the start and on Restart
                                  v
@@ -721,6 +724,9 @@ of the time.
   them, in every unit and in a run, so a replay does not depend on the step.
 * A history row carries the time its event was handled; a run sends its state
   at most every 0.05 s of the wall clock, its history always.
+* `Channel` and the step helpers are public: an observed session, such as the
+  HSM-ROS2 runner of `hsm_robot_ros_tests` relaying the trace of a controller,
+  uses them without `Session`; the lines of its threads do not mix.
 
 ## Interface
 

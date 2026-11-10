@@ -61,7 +61,7 @@ class _NoInput:
         return ''
 
 
-class _LogWriter:
+class LogWriter:
     """A text stream whose lines go out as log messages."""
 
     def __init__(self, send):
@@ -101,6 +101,81 @@ def json_value(value):
     return str(value)
 
 
+def history_row(outcome, when, origin='model'):
+    """The history message of an outcome handled at the time when."""
+    event = outcome.event
+    row = {'event': event.name, 'time': round(when, TIME_DIGITS), 'origin': origin,
+           'outcome': outcome.status,
+           'fired': unique(element(t) for t in outcome.transitions)}
+    if event.parameters:
+        row['params'] = {k: json_value(v) for k, v in event.parameters.items()}
+    return row
+
+
+def active(dispatcher):
+    """The active states of every machine."""
+    return unique(element(s) for m in dispatcher.machines() for s in dispatcher.states(m))
+
+
+def fired(records):
+    """The transitions of the fire records of a trace."""
+    return unique(element(r[2]) for r in records if r[0] == 'fire')
+
+
+class Channel:
+    """JSON-RPC 2.0, one object per line: listen() queues the messages read, the
+    lines written by several threads do not mix."""
+
+    def __init__(self, writer=None):
+        self.out = writer if writer is not None else sys.stdout
+        self.messages = queue.Queue()
+        self.lock = threading.Lock()
+
+    def listen(self, reader=None):
+        reader = reader if reader is not None else sys.stdin
+        threading.Thread(target=self._read, args=(reader,), daemon=True).start()
+
+    def _read(self, reader):
+        for line in reader:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                message = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(message, dict):
+                self.messages.put(message)
+        # the end of the input ends the session
+        self.messages.put({'method': 'shutdown'})
+
+    def send(self, message):
+        line = json.dumps(dict(message, jsonrpc='2.0'), ensure_ascii=False, separators=(',', ':'))
+        with self.lock:
+            self.out.write(line + '\n')
+            self.out.flush()
+
+    def notify(self, method, params):
+        self.send({'method': method, 'params': params})
+
+    def reply(self, ident, result):
+        if ident is not None:
+            self.send({'id': ident, 'result': result})
+
+    def reply_error(self, ident, code, text, data=None):
+        error = {'code': code, 'message': text}
+        if data is not None:
+            error['data'] = data
+        if ident is not None:
+            self.send({'id': ident, 'error': error})
+
+    def log(self, text, level=None):
+        params = {'text': text}
+        if level is not None:
+            params['level'] = level
+        self.notify('log', params)
+
+
 class Session:
     """make(**options) returns a new Dispatcher built with the options given
     (clock, calendar, trace, output, input, timers), at the start and at every
@@ -123,8 +198,7 @@ class Session:
         self.inputs = []         # the items and the events posted, for save
         self.status = PAUSED
         self.text = ''
-        self.out = None
-        self.messages = queue.Queue()
+        self.channel = Channel()
         self.running = False
         self.speed = SPEEDS[0]
         self.run_wall = 0.0
@@ -139,65 +213,38 @@ class Session:
 
     def serve(self, reader=None, writer=None):
         """Run the session until shutdown or the end of the input; the exit code."""
-        reader = reader if reader is not None else sys.stdin
-        self.out = writer if writer is not None else sys.stdout
-        prints = _LogWriter(self.log)
+        self.channel = Channel(writer)
+        messages = self.channel.messages
+        prints = LogWriter(self.log)
         saved = sys.stdout
         # the prints of the code go out as log messages, the channel keeps its stream
         sys.stdout = prints
-        threading.Thread(target=self._read, args=(reader,), daemon=True).start()
+        self.channel.listen(reader)
         try:
             while not self.done:
                 if self.running:
-                    while not self.messages.empty() and not self.done:
-                        self.handle(self.messages.get())
+                    while not messages.empty() and not self.done:
+                        self.handle(messages.get())
                     if self.running and not self.done:
                         self.run_once()
                 else:
-                    self.handle(self.messages.get())
+                    self.handle(messages.get())
         finally:
             prints.flush()
             sys.stdout = saved
         return self.code
 
-    def _read(self, reader):
-        for line in reader:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                message = json.loads(line)
-            except ValueError:
-                continue
-            if isinstance(message, dict):
-                self.messages.put(message)
-        # the end of the input ends the session
-        self.messages.put({'method': 'shutdown'})
-
-    def send(self, message):
-        message = dict(message, jsonrpc='2.0')
-        self.out.write(json.dumps(message, ensure_ascii=False, separators=(',', ':')) + '\n')
-        self.out.flush()
-
     def notify(self, method, params):
-        self.send({'method': method, 'params': params})
+        self.channel.notify(method, params)
 
     def reply(self, ident, result):
-        if ident is not None:
-            self.send({'id': ident, 'result': result})
+        self.channel.reply(ident, result)
 
     def reply_error(self, ident, code, text, data=None):
-        error = {'code': code, 'message': text}
-        if data is not None:
-            error['data'] = data
-        if ident is not None:
-            self.send({'id': ident, 'error': error})
+        self.channel.reply_error(ident, code, text, data)
 
     def log(self, text, level=None):
-        params = {'text': text}
-        if level is not None:
-            params['level'] = level
-        self.notify('log', params)
+        self.channel.log(text, level)
 
     def handle(self, message):
         method = message.get('method')
@@ -338,7 +385,7 @@ class Session:
         del self.records[:]
         self.dispatcher = self.make(
             clock=lambda: self.now, calendar=lambda: self.base + self.now,
-            trace=self.records.append, output=_LogWriter(self.log), input=_NoInput(),
+            trace=self.records.append, output=LogWriter(self.log), input=_NoInput(),
             timers=self.stream.timers != hsmd.stream.TIMERS_RECORDED)
         return self.stamp(self.start(self.dispatcher) or [])
 
@@ -491,24 +538,18 @@ class Session:
         for when, outcome in outcomes:
             if outcome is None:
                 continue
-            event = outcome.event
-            row = {'event': event.name, 'time': round(when, TIME_DIGITS),
-                   'origin': self.origins.get(id(event), (None, 'model'))[1],
-                   'outcome': outcome.status,
-                   'fired': unique(element(t) for t in outcome.transitions)}
-            if event.parameters:
-                row['params'] = {k: json_value(v) for k, v in event.parameters.items()}
-            self.notify('history', row)
+            origin = self.origins.get(id(outcome.event), (None, 'model'))[1]
+            self.notify('history', history_row(outcome, when, origin))
         if throttled and time.monotonic() - self.last_state < RUN_STATE_INTERVAL_S:
             return
         self.last_state = time.monotonic()
         d = self.dispatcher
         status = FINISHED if self.finished() else (RUNNING if self.running else self.status)
         params = {'status': status, 'text': self.text, 'time': round(self.now, TIME_DIGITS),
-                  'fired': unique(element(r[2]) for r in self.records if r[0] == 'fire')}
+                  'fired': fired(self.records)}
         del self.records[:]
         if d is not None:
-            params['active'] = unique(element(s) for m in d.machines() for s in d.states(m))
+            params['active'] = active(d)
             params['events'] = self.triggers()
             params['queue'] = [e.name for e in d.queued()]
         if self.stream.items:

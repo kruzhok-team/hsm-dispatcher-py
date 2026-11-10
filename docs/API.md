@@ -1,6 +1,6 @@
 # The Python HSM Dispatcher Interface Specification
 
-Document version: 0.3 (2026-10-27)
+Document version: 0.4 (2026-11-10)
 
 This document is for the authors of the programs that run state machines on
 the dispatcher, of the diagrams those programs run, and of the component
@@ -515,6 +515,34 @@ The answer to `initialize`:
 * An error stops the dispatcher. The session then sends a `state` `finished`
   with the error in `text`, and a `log` with the level `error`; Restart
   starts again.
+
+### The channel and the steps
+
+Another session reuses the protocol pieces without `Session`, e.g. an
+observed one relaying the trace of a machine that runs elsewhere:
+
+```python
+import hsmd.session
+
+channel = hsmd.session.Channel()
+channel.listen()
+message = channel.messages.get()             # initialize
+channel.reply(message.get('id'), {'kind': 'observed'})
+channel.notify('state', {'status': 'running', 'active': hsmd.session.active(dispatcher)})
+```
+
+| Member | Meaning |
+|---|---|
+| `Channel(writer=sys.stdout)` | JSON-RPC 2.0 to `writer`, one object per line, flushed; the lines of several threads do not mix |
+| `listen(reader=sys.stdin)` | a reader thread puts every JSON object line into `messages`, a `queue.Queue`; the end of the input puts a `shutdown` |
+| `send(message)`, `notify(method, params)`, `reply(ident, result)`, `reply_error(ident, code, text, data=None)`, `log(text, level=None)` | a line each; a reply to the `ident` `None` is not sent |
+| `LogWriter(send)` | a text stream whose lines go to `send`, e.g. `channel.log` as `sys.stdout` |
+| `history_row(outcome, when, origin='model')` | the `history` message of an `Outcome` handled at the time `when` |
+| `active(dispatcher)` | the active states of every machine |
+| `fired(records)` | the transitions of the `fire` records of a trace |
+| `element(ident)`, `unique(ids)` | the document element of a trace id; the ids without repeats, in their order |
+
+The helpers report the ids through `element()`, as the session does.
 
 ### The stream
 

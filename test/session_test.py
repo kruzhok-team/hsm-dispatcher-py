@@ -22,6 +22,7 @@
 #  -----------------------------------------------------------------------------
 
 import difflib
+import io
 import json
 import os
 import queue
@@ -39,6 +40,9 @@ WAIT_S = 30
 MARK = 'mark'
 MARK_BASE = 1000
 TMP = '<tmp>'
+# the writers of the channel test: their lines must not mix
+THREADS = 4
+THREAD_LINES = 200
 
 STREAM = '0.300 SHOW\n0.500 STOP\nRESUME\n'
 RECORDED = '# timers: recorded\n0.050 t1.TIMEOUT\n0.150 SHOW\n'
@@ -142,7 +146,63 @@ def transcript(tmp):
     return '\n'.join(lines) + '\n'
 
 
+class _Machines:
+    """A dispatcher for active(): two machines, an inlined submachine state."""
+
+    @staticmethod
+    def machines():
+        return ['m1', 'm2']
+
+    @staticmethod
+    def states(machine):
+        return {'m1': ['n1', 'n1/n2'], 'm2': ['n5']}[machine]
+
+
+def channel():
+    """The channel and the step helpers alone; the problems found."""
+    sys.path.insert(0, REPOSITORY)
+    import hsmd  # pylint: disable=import-outside-toplevel
+    import hsmd.session  # pylint: disable=import-outside-toplevel
+    problems = []
+    lines = io.StringIO('{"id":1,"method":"initialize"}\nnot json\n[1]\n\n{"method":"event"}\n')
+    c = hsmd.session.Channel(io.StringIO())
+    c.listen(lines)
+    methods = [c.messages.get(timeout=WAIT_S).get('method') for _ in range(3)]
+    if methods != ['initialize', 'event', 'shutdown']:
+        problems.append('messages {}'.format(methods))
+    writers = [threading.Thread(target=lambda n=n: [c.notify('log', {'text': str(n) * 50})
+                                                    for _ in range(THREAD_LINES)])
+               for n in range(THREADS)]
+    for w in writers:
+        w.start()
+    for w in writers:
+        w.join()
+    c.reply(None, {})
+    c.reply(7, {})
+    sent = c.out.getvalue().splitlines()
+    if len(sent) != THREADS * THREAD_LINES + 1 or \
+            any(json.loads(s).get('jsonrpc') != '2.0' for s in sent):
+        problems.append('{} lines written'.format(len(sent)))
+    outcome = hsmd.Outcome(hsmd.Event('E', parameters={'x': 1}), [])
+    row = hsmd.session.history_row(outcome, 0.5, 'system')
+    if row != {'event': 'E', 'time': 0.5, 'origin': 'system', 'outcome': 'dropped', 'fired': [],
+               'params': {'x': 1}}:
+        problems.append('history {}'.format(row))
+    records = [('fire', 'm1', 'e1'), ('enter', 'm1', 'n2'), ('fire', 'm1', 'n2#1'),
+               ('fire', 'm1', 'e1')]
+    if hsmd.session.fired(records) != ['e1', 'n2']:
+        problems.append('fired {}'.format(hsmd.session.fired(records)))
+    if hsmd.session.active(_Machines()) != ['n1', 'n5']:
+        problems.append('active {}'.format(hsmd.session.active(_Machines())))
+    return problems
+
+
 def main():
+    problems = channel()
+    if problems:
+        print('FAIL channel: ' + '; '.join(problems))
+        return 1
+    print('ok   channel')
     with tempfile.TemporaryDirectory() as tmp:
         output = transcript(tmp)
     if '--regen' in sys.argv:

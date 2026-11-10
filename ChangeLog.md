@@ -1,5 +1,12 @@
 # hsm-dispatcher-py project changelog
 
+## Unreleased
+
+Added:
+- `hsmd.session.Channel`, `LogWriter` and the step helpers `history_row()`,
+  `active()`, `fired()`: the protocol pieces for the other sessions, e.g. the
+  observed session of an HSM-ROS2 controller.
+
 ## Version 0.2.0
 
 Added:

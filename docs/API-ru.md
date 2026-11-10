@@ -1,6 +1,6 @@
 # Спецификация интерфейса диспетчера HSM для Python
 
-Версия документа: 0.3 (2026-10-27)
+Версия документа: 0.4 (2026-11-10)
 
 Документ предназначен авторам программ, исполняющих машины состояний на
 диспетчере, авторам диаграмм, которые эти программы исполняют, и авторам
@@ -519,6 +519,35 @@ sys.exit(hsmd.session.Session(make, period=0.1).serve())
   пустой ввод, потому что stdin — канал сессии.
 * Ошибка останавливает диспетчер. Тогда сессия отправляет `state` `finished`
   с ошибкой в `text` и `log` с уровнем `error`; перезапуск начинает заново.
+
+### Канал и шаги
+
+Другая сессия использует части протокола без `Session`, например
+наблюдаемая (`observed`), которая передаёт трассировку машины, работающей
+в другом месте:
+
+```python
+import hsmd.session
+
+channel = hsmd.session.Channel()
+channel.listen()
+message = channel.messages.get()             # initialize
+channel.reply(message.get('id'), {'kind': 'observed'})
+channel.notify('state', {'status': 'running', 'active': hsmd.session.active(dispatcher)})
+```
+
+| Член | Значение |
+|---|---|
+| `Channel(writer=sys.stdout)` | JSON-RPC 2.0 в `writer`, один объект на строку, со сбросом буфера; строки нескольких потоков исполнения не смешиваются |
+| `listen(reader=sys.stdin)` | поток чтения кладёт каждую строку с объектом JSON в `messages` — `queue.Queue`; конец ввода кладёт `shutdown` |
+| `send(message)`, `notify(method, params)`, `reply(ident, result)`, `reply_error(ident, code, text, data=None)`, `log(text, level=None)` | по одной строке; ответ на `ident`, равный `None`, не отправляется |
+| `LogWriter(send)` | текстовый поток, строки которого уходят в `send`, например `channel.log` в роли `sys.stdout` |
+| `history_row(outcome, when, origin='model')` | сообщение `history` для `Outcome`, обработанного в момент `when` |
+| `active(dispatcher)` | активные состояния всех машин |
+| `fired(records)` | переходы из записей `fire` трассировки |
+| `element(ident)`, `unique(ids)` | элемент документа для идентификатора трассировки; идентификаторы без повторов в их порядке |
+
+Помощники сообщают идентификаторы через `element()`, как и сессия.
 
 ### Поток
 
