@@ -1,6 +1,6 @@
 # hsm-dispatcher-py project changelog
 
-## Version 0.2.1 (unreleased)
+## Version 0.2.1
 
 Added:
 - `hsmd.session.Channel`, `LogWriter` and the step helpers `history_row()`,
